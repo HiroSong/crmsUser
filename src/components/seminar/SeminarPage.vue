@@ -22,12 +22,7 @@
               <el-collapse-item>
                 <template slot="title">
                   <div class="content-text">业务流程分析</div>
-                  <el-button
-                    type="text"
-                    plain
-                    class="iconfont icon-xiugai orange-text"
-                    @click.native.prevent="enterModify"
-                  ></el-button>
+                  <div class="iconfont icon-xiugai orange-text" @click="enterModify"></div>
                 </template>
                 <el-row>
                   <el-button

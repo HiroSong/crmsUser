@@ -109,7 +109,7 @@
 import CommonSubHeader from '@/components/common/CommonSubHeader'
 
 export default {
-  name: 'TeamPage',
+  name: 'TeamInfoPage',
   components: {
     'common-sub-header': CommonSubHeader
   },
