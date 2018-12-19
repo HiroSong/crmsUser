@@ -69,6 +69,10 @@ body {
   color: #ffffff;
 }
 
+.green-text {
+  color: #67c23a;
+}
+
 .orange-text {
   color: #fc9153;
 }

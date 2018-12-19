@@ -60,9 +60,7 @@ export default {
         reportRate: 0,
         minNum: undefined,
         maxNum: undefined,
-        startDate: undefined,
         startTime: undefined,
-        endDate: undefined,
         endTime: undefined,
         conflictCourse: [{
           course: 'J2EE',
@@ -98,11 +96,11 @@ export default {
         },
         {
           text: '组队开始时间',
-          value: this.courseInfo.startDate + ' ' + this.courseInfo.startTime
+          value: this.courseInfo.startTime
         },
         {
           text: '组队截止时间',
-          value: this.courseInfo.endDate + ' ' + this.courseInfo.endTime
+          value: this.courseInfo.endTime
         }
       ]
       this.courseInfo.conflictCourse.forEach((value, index, arr) => {

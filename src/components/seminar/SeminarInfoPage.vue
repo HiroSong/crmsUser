@@ -4,42 +4,229 @@
       <common-sub-header :role="role" :is-mobile="true">{{courseName+'-讨论课'}}</common-sub-header>
     </el-header>
     <el-main class="main-gap">
-      <div>
-        <el-row type="flex" justify="space-between">
-          <el-col :span="6">轮次</el-col>
-          <el-col :span="18"></el-col>
-        </el-row>
+      <el-table :data="infoData" :show-header="false">
+        <el-table-column min-width="40%">
+          <template slot-scope="scope">
+            <div class="tip-text bold-text">{{scope.row.title}}</div>
+          </template>
+        </el-table-column>
+        <el-table-column min-width="60%">
+          <template slot-scope="scope">
+            <el-row
+              v-if="scope.row.title==='课程情况'&&!(seminarInfo.status==='未开始'&&role!=='teacher')"
+            >
+              <el-col :span="16">
+                <div class="tip-text">{{scope.row.content}}</div>
+              </el-col>
+              <el-col :span="8">
+                <div class="orange-text" style="font-size: 0.75rem" @click="enterAttendance">查看</div>
+              </el-col>
+            </el-row>
+            <div v-else class="tip-text">{{scope.row.content}}</div>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div v-if="role==='teacher'">
+        <div v-if="seminarInfo.status==='正在进行'">
+          <el-row type="flex" justify="center" class="normal-gap">
+            <el-col :span="12">
+              <el-button
+                plain
+                class="orange-text full-text"
+                @click.native.prevent="enterProcess"
+              >进入讨论课</el-button>
+            </el-col>
+          </el-row>
+        </div>
+        <div v-else-if="seminarInfo.status==='暂停计时'">
+          <el-row type="flex" justify="center" class="small-gap">
+            <el-col :span="12">
+              <el-button
+                plain
+                class="orange-text full-text"
+                @click.native.prevent="continueSeminar"
+              >继续讨论课</el-button>
+            </el-col>
+          </el-row>
+        </div>
+        <div v-else-if="seminarInfo.status==='未开始'">
+          <el-row type="flex" justify="center" class="small-gap">
+            <el-col :span="12">
+              <el-button
+                plain
+                class="orange-text full-text"
+                @click.native.prevent="enterProcess"
+              >开始讨论课</el-button>
+            </el-col>
+          </el-row>
+        </div>
+        <div v-else-if="seminarInfo.status==='已完成'">
+          <el-row type="flex" justify="center" class="small-gap">
+            <el-col :span="12">
+              <el-button
+                plain
+                class="orange-text full-text"
+                @click.native.prevent="setReportScore"
+              >书面报告评分</el-button>
+            </el-col>
+          </el-row>
+          <el-row type="flex" justify="center" class="small-gap">
+            <el-col :span="12">
+              <el-button plain class="orange-text full-text" @click.native.prevent="enterScore">查看成绩</el-button>
+            </el-col>
+          </el-row>
+        </div>
       </div>
-      <div>
-        <el-row type="flex" justify="space-between">
-          <el-col :span="6">主题</el-col>
-          <el-col :span="18"></el-col>
-        </el-row>
+      <div v-else>
+        <div v-if="seminarInfo.status==='正在进行'||seminarInfo.status==='暂停计时'">
+          <el-row type="flex" justify="center" class="normal-gap">
+            <el-col :span="12">
+              <el-button
+                plain
+                class="orange-text full-text"
+                @click.native.prevent="enterProcess"
+              >进入讨论课</el-button>
+            </el-col>
+          </el-row>
+          <el-row v-if="attendanceId!==undefined" type="flex" justify="center" class="small-gap">
+            <el-col :span="12">
+              <el-button plain class="orange-text full-text" @click.native.prevent="submitPPT">PPT提交</el-button>
+            </el-col>
+          </el-row>
+        </div>
+        <div v-else-if="seminarInfo.status==='未开始'">
+          <div v-if="attendanceId!==undefined">
+            <el-table :data="pptData" :show-header="false">
+              <el-table-column min-width="40%">
+                <template slot-scope="scope">
+                  <div class="tip-text bold-text">{{scope.row.title}}</div>
+                </template>
+              </el-table-column>
+              <el-table-column min-width="60%">
+                <template slot-scope="scope">
+                  <div v-if="scope.row.title==='报名信息'">
+                    <el-row>
+                      <el-col :span="16">
+                        <div class="tip-text">{{scope.row.content}}</div>
+                      </el-col>
+                      <el-col :span="8">
+                        <div
+                          class="orange-text"
+                          style="font-size: 0.75rem"
+                          @click="enterAttendance"
+                        >修改</div>
+                      </el-col>
+                    </el-row>
+                  </div>
+                  <div
+                    v-else-if="scope.row.content===false"
+                    class="red-text"
+                    style="font-size: 0.75rem;"
+                  >未提交</div>
+                  <div v-else class="green-text" style="font-size: 0.75rem;">已提交</div>
+                </template>
+              </el-table-column>
+            </el-table>
+            <el-row type="flex" justify="center" class="small-gap">
+              <el-col :span="12">
+                <el-button
+                  plain
+                  class="orange-text full-text"
+                  @click.native.prevent="submitPPT"
+                >PPT提交</el-button>
+              </el-col>
+            </el-row>
+          </div>
+          <div v-else>
+            <el-table :data="timeData" :show-header="false">
+              <el-table-column min-width="40%">
+                <template slot-scope="scope">
+                  <div class="tip-text bold-text">{{scope.row.title}}</div>
+                </template>
+              </el-table-column>
+              <el-table-column min-width="60%">
+                <template slot-scope="scope">
+                  <div class="red-text" style="font-size: 0.75rem;">{{scope.row.content}}</div>
+                </template>
+              </el-table-column>
+            </el-table>
+            <el-row type="flex" justify="center" class="small-gap">
+              <el-col :span="12">
+                <el-button
+                  plain
+                  class="orange-text full-text"
+                  @click.native.prevent="enterAttendance"
+                >报名</el-button>
+              </el-col>
+            </el-row>
+          </div>
+        </div>
+        <div v-else-if="seminarInfo.status==='已完成'">
+          <div v-if="attendanceId!==undefined">
+            <el-table :data="fileData" :show-header="false">
+              <el-table-column min-width="40%">
+                <template slot-scope="scope">
+                  <div class="tip-text bold-text">{{scope.row.title}}</div>
+                </template>
+              </el-table-column>
+              <el-table-column min-width="60%">
+                <template slot-scope="scope">
+                  <div v-if="scope.row.title==='报名信息'" class="tip-text">{{scope.row.content}}</div>
+                  <div
+                    v-else-if="scope.row.content===false"
+                    class="red-text"
+                    style="font-size: 0.75rem;"
+                  >未提交
+                    <br>
+                    {{scope.row.restTime}}
+                  </div>
+                  <div v-else class="green-text" style="font-size: 0.75rem;">已提交</div>
+                </template>
+              </el-table-column>
+            </el-table>
+            <el-row type="flex" justify="center" class="small-gap">
+              <el-col :span="12">
+                <el-button
+                  plain
+                  class="orange-text full-text"
+                  @click.native.prevent="submitReport"
+                >书面报告提交</el-button>
+              </el-col>
+            </el-row>
+          </div>
+        </div>
+        <div v-else-if="seminarInfo.status==='已截止'">
+          <div v-if="attendanceId!==undefined">
+            <el-table :data="fileData" :show-header="false">
+              <el-table-column min-width="40%">
+                <template slot-scope="scope">
+                  <div class="tip-text bold-text">{{scope.row.title}}</div>
+                </template>
+              </el-table-column>
+              <el-table-column min-width="60%">
+                <template slot-scope="scope">
+                  <div v-if="scope.row.title==='报名信息'" class="tip-text">{{scope.row.content}}</div>
+                  <div
+                    v-else-if="scope.row.content===false"
+                    class="red-text"
+                    style="font-size: 0.75rem;"
+                  >未提交</div>
+                  <div v-else class="green-text" style="font-size: 0.75rem;">已提交</div>
+                </template>
+              </el-table-column>
+            </el-table>
+            <el-row type="flex" justify="center" class="small-gap">
+              <el-col :span="12">
+                <el-button
+                  plain
+                  class="orange-text full-text"
+                  @click.native.prevent="enterScore"
+                >查看成绩</el-button>
+              </el-col>
+            </el-row>
+          </div>
+        </div>
       </div>
-      <div class="normal-gap">
-        <el-row type="flex" justify="space-between">
-          <el-col :span="6">课次序号</el-col>
-          <el-col :span="18"></el-col>
-        </el-row>
-      </div>
-      <div class="normal-gap">
-        <el-row type="flex" justify="space-between">
-          <el-col :span="6">要求</el-col>
-          <el-col :span="18"></el-col>
-        </el-row>
-      </div>
-      <div class="normal-gap">
-        <el-row type="flex" justify="space-between">
-          <el-col :span="6">课程情况</el-col>
-          <el-col :span="10"></el-col>
-          <el-col :span="8">查看信息</el-col>
-        </el-row>
-      </div>
-      <el-row type="flex" justify="center" class="top">
-        <el-col :span="12">
-          <el-button plain class="orange-text full-text">进入讨论课</el-button>
-        </el-col>
-      </el-row>
     </el-main>
   </el-container>
   <el-container v-else>
@@ -257,13 +444,13 @@ export default {
         id: undefined,
         topic: '需求分析',
         intro: undefined,
-        status: '已结束',
+        status: '已完成',
         order: 1,
         courseId: undefined,
         teamNumLimit: 6,
-        signupStartTime: '2018-01-01',
-        signupEndTime: '2018-01-10',
-        reportDDL: '2018-01-11',
+        signupStartTime: '2018-01-01 08:00:00',
+        signupEndTime: '2018-01-10 12:00:00',
+        reportDDL: '2018-12-29 00:00:00',
         classId: undefined
       },
       teamList: [{
@@ -336,6 +523,74 @@ export default {
         title: '课程情况',
         content: this.seminarInfo.status
       }]
+    },
+    timeData() {
+      return [{
+        title: '报名开始时间',
+        content: this.seminarInfo.signupStartTime
+      }, {
+        title: '报名结束时间',
+        content: this.seminarInfo.signupEndTime
+      }]
+    },
+    pptData() {
+      return [{
+        title: '报名信息',
+        // 记得添加
+        content: '队伍报名信息'
+      }, {
+        title: 'PPT',
+        content: false
+      }]
+    },
+    restTime() {
+      let curTime = Date.parse(new Date())
+      let endTime = Date.parse(new Date(this.seminarInfo.reportDDL.replace(/-/g, '/')))
+      let restMs = endTime - curTime
+      var days = Math.floor(restMs / (24 * 3600 * 1000))
+      var leave1 = restMs % (24 * 3600 * 1000)
+      var hours = Math.floor(leave1 / (3600 * 1000))
+      var leave2 = leave1 % (3600 * 1000)
+      var minutes = Math.floor(leave2 / (60 * 1000))
+      return '剩余' + days + '天' + hours + '小时' + minutes + '分'
+    },
+    fileData() {
+      return [{
+        title: '报名信息',
+        // 记得添加
+        content: '队伍报名信息'
+      }, {
+        title: 'PPT',
+        content: true
+      }, {
+        title: '书面报告',
+        content: false,
+        restTime: this.restTime
+      }]
+    }
+  },
+  methods: {
+    enterAttendance() {
+      this.$router.push('/seminar/attendance')
+    },
+    continueSeminar() {
+
+      this.$router.push('/seminar/process')
+    },
+    enterProcess() {
+      this.$router.push('/seminar/process')
+    },
+    setReportScore() {
+      this.$router.push('/seminar/score/report')
+    },
+    enterScore() {
+      this.$router.push('/seminar/score')
+    },
+    submitPPT() {
+
+    },
+    submitReport() {
+
     }
   }
 }

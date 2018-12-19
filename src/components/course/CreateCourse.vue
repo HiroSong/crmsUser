@@ -32,42 +32,24 @@
           <div class="small-gap content-text">组队开始时间</div>
         </el-row>
         <cube-input
-          v-model="courseInfo.startDate"
-          placeholder="日期"
-          type="date"
+          v-model="courseInfo.startTime"
+          placeholder="开始时间"
+          type="date-time"
           :readonly="true"
           :disabled="true"
           class="small-gap content-text"
-          @click.native="showStartDatePicker"
-        ></cube-input>
-        <cube-input
-          v-model="courseInfo.startTime"
-          placeholder="时间"
-          type="time"
-          :readonly="true"
-          :disabled="true"
-          class="content-text"
           @click.native="showStartTimePicker"
         ></cube-input>
         <el-row>
           <div class="small-gap content-text">组队截止时间</div>
         </el-row>
         <cube-input
-          v-model="courseInfo.endDate"
-          placeholder="日期"
-          type="date"
+          v-model="courseInfo.endTime"
+          placeholder="截止时间"
+          type="date-time"
           :readonly="true"
           :disabled="true"
           class="small-gap content-text"
-          @click.native="showEndDatePicker"
-        ></cube-input>
-        <cube-input
-          v-model="courseInfo.endTime"
-          placeholder="时间"
-          type="time"
-          :readonly="true"
-          :disabled="true"
-          class="content-text"
           @click.native="showEndTimePicker"
         ></cube-input>
         <el-row class="small-gap" type="flex" justify="space-between">
@@ -139,9 +121,7 @@ export default {
         reportRate: 0,
         minNum: undefined,
         maxNum: undefined,
-        startDate: undefined,
         startTime: undefined,
-        endDate: undefined,
         endTime: undefined,
         conflictCourse: [{
           course: 'J2EE',
@@ -249,65 +229,37 @@ export default {
     }
   },
   methods: {
-    showStartDatePicker() {
-      if (!this.startDatePicker) {
-        this.startDatePicker = this.$createDatePicker({
-          title: '开始日期',
-          min: new Date(2018, 1, 1),
-          max: new Date(2020, 9, 20),
-          value: new Date(),
-          onSelect: (date, selectedVal, selectedText) => {
-            this.courseInfo.startDate = selectedText.join('-')
-          },
-        })
-      }
-      this.startDatePicker.show()
-    },
     showStartTimePicker() {
-      if (!this.startTimePicker) {
-        this.startTimePicker = this.$createDatePicker({
-          title: '开始时间',
-          min: [8, 0, 0],
-          max: [23, 59, 59],
-          value: new Date(),
-          startColumn: 'hour',
-          columnCount: 2,
-          onSelect: (date, selectedVal, selectedText) => {
-            this.courseInfo.startTime = selectedText.join(':')
-          }
-        })
-      }
-      this.startTimePicker.show()
-    },
-    showEndDatePicker() {
-      if (!this.endDatePicker) {
-        this.endDatePicker = this.$createDatePicker({
-          title: '结束日期',
-          min: new Date(2018, 1, 1),
-          max: new Date(2020, 9, 20),
-          value: new Date(),
-          onSelect: (date, selectedVal, selectedText) => {
-            this.courseInfo.endDate = selectedText.join('-')
-          },
-        })
-      }
-      this.endDatePicker.show()
+      this.$createDatePicker({
+        title: '开始时间',
+        min: new Date(),
+        max: new Date(2020, 9, 20, 20, 59, 59),
+        value: new Date(),
+        columnCount: 6,
+        onSelect: (date, selectedVal, selectedText) => {
+          this.courseInfo.startTime = selectedText.join('-')
+        }
+      }).show()
     },
     showEndTimePicker() {
-      if (!this.endTimePicker) {
-        this.endTimePicker = this.$createDatePicker({
+      if (this.courseInfo.startTime === undefined) {
+        this.$createToast({
+          time: 500,
+          txt: '请先选择开始时间',
+          type: 'warn'
+        }).show()
+      } else {
+        this.$createDatePicker({
           title: '结束时间',
-          min: [8, 0, 0],
-          max: [23, 59, 59],
+          min: new Date(),
+          max: new Date(2020, 9, 20, 20, 59, 59),
           value: new Date(),
-          startColumn: 'hour',
-          columnCount: 2,
+          columnCount: 6,
           onSelect: (date, selectedVal, selectedText) => {
-            this.courseInfo.endTime = selectedText.join(':')
+            this.courseInfo.endTime = selectedText.join('-')
           }
-        })
+        }).show()
       }
-      this.endTimePicker.show()
     },
     getCourse() {
       //记得返回的是未选取过的课程

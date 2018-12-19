@@ -165,6 +165,13 @@ const router = new Router({
     },
     component: resolve => require(['@/components/seminar/SeminarAttendancePage'], resolve)
   }, {
+    path: '/seminar/score/report',
+    name: 'ScoreReportPage',
+    meta: {
+      title: '报告评分'
+    },
+    component: resolve => require(['@/components/seminar/ScoreReport'], resolve)
+  }, {
     path: '/seminar/score',
     name: 'SeminarScorePage',
     meta: {
