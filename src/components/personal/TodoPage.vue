@@ -13,12 +13,12 @@
             <div class="content-text">消息标题</div>
           </template>
           <div class="tip-text">消息内容</div>
-          <el-row type="flex" justify="space-around" class="small-gap">
+          <el-row class="small-gap" type="flex" justify="space-around">
             <svg
               class="icon"
               style="width:0.875rem; height:0.875rem;"
               aria-hidden="true"
-              @click.native.prevent="accept"
+              @click="accept"
             >
               <use xlink:href="#icon-dagou"></use>
             </svg>
@@ -26,7 +26,7 @@
               class="icon"
               style="width:0.875rem; height:0.875rem;"
               aria-hidden="true"
-              @click.native.prevent="reject"
+              @click="reject"
             >
               <use xlink:href="#icon-cha"></use>
             </svg>

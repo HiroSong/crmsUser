@@ -70,19 +70,9 @@
           class="content-text"
           @click.native="showEndTimePicker"
         ></cube-input>
-        <el-row class="small-gap">
-          <el-col :span="18">
-            <div class="small-gap content-text">冲突课程</div>
-          </el-col>
-          <el-col :span="6">
-            <el-button
-              type="text"
-              plain
-              class="el-icon-circle-plus-outline orange-text"
-              circle
-              @click.native.prevent="showCourse"
-            ></el-button>
-          </el-col>
+        <el-row class="small-gap" type="flex" justify="space-between">
+          <div class="content-text">冲突课程</div>
+          <div class="el-icon-circle-plus-outline orange-text" @click="showCourse"></div>
         </el-row>
         <el-dialog title="选择课程" :visible.sync="dialogVisible" width="80vw" class="content-text">
           <el-select
@@ -114,13 +104,10 @@
           <el-table-column prop="teacher" align="center"></el-table-column>
           <el-table-column align="center">
             <template slot-scope="scope">
-              <el-button
-                type="text"
-                plain
-                circle
+              <div
                 class="el-icon-circle-close-outline orange-text"
-                @click.native.prevent="deleteConflictCourse(scope.$index,courseInfo.conflictCourse)"
-              ></el-button>
+                @click="deleteConflictCourse(scope.$index,courseInfo.conflictCourse)"
+              ></div>
             </template>
           </el-table-column>
         </el-table>

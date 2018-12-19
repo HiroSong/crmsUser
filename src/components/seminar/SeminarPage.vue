@@ -41,12 +41,9 @@
             </el-collapse>
           </div>
           <div v-else>
-            <el-button
-              type="text"
-              plain
-              class="content-text full-width text-start"
-              @click.native.prevent="enterSeminar"
-            >1-业务流程分析</el-button>
+            <el-row>
+              <div class="content-text full-width text-start" @click="enterSeminar">1-业务流程分析</div>
+            </el-row>
           </div>
         </el-collapse-item>
       </el-collapse>
@@ -187,8 +184,7 @@ export default {
       return this.courseName + '-讨论课'
     },
     role() {
-      // return this.$store.state.role
-      return 'teacher'
+      return this.$store.state.role
     },
     isMobile() {
       return this.$store.state.isMobile
