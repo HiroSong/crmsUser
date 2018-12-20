@@ -90,7 +90,9 @@
           </el-row>
           <el-row v-if="attendanceId!==undefined" type="flex" justify="center" class="small-gap">
             <el-col :span="12">
-              <el-button plain class="orange-text full-text" @click.native.prevent="submitPPT">PPT提交</el-button>
+              <el-upload action="上传地址" :limit="1" :multiple="false">
+                <el-button plain class="orange-text full-text">PPT提交</el-button>
+              </el-upload>
             </el-col>
           </el-row>
         </div>
@@ -129,11 +131,9 @@
             </el-table>
             <el-row type="flex" justify="center" class="small-gap">
               <el-col :span="12">
-                <el-button
-                  plain
-                  class="orange-text full-text"
-                  @click.native.prevent="submitPPT"
-                >PPT提交</el-button>
+                <el-upload action="上传地址" :limit="1" :multiple="false">
+                  <el-button plain class="orange-text full-text">PPT提交</el-button>
+                </el-upload>
               </el-col>
             </el-row>
           </div>
@@ -186,11 +186,9 @@
             </el-table>
             <el-row type="flex" justify="center" class="small-gap">
               <el-col :span="12">
-                <el-button
-                  plain
-                  class="orange-text full-text"
-                  @click.native.prevent="submitReport"
-                >书面报告提交</el-button>
+                <el-upload action="上传地址" :limit="1" :multiple="false">
+                  <el-button plain class="orange-text full-text">书面报告提交</el-button>
+                </el-upload>
               </el-col>
             </el-row>
           </div>
@@ -585,12 +583,6 @@ export default {
     },
     enterScore() {
       this.$router.push('/seminar/score')
-    },
-    submitPPT() {
-
-    },
-    submitReport() {
-
     }
   }
 }
