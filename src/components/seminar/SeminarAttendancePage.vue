@@ -64,7 +64,7 @@
       </el-row>
       <el-row v-if="role==='teacher'" class="normal-gap" type="flex" justify="center">
         <el-col :span="12">
-          <el-button plain class="full-width" @click.native.prevent="downloadPPT">批量下载</el-button>
+          <el-button plain class="orange-text full-width" @click.native.prevent="downloadPPT">批量下载</el-button>
         </el-col>
       </el-row>
     </el-main>
@@ -75,7 +75,7 @@
 import CommonSubHeader from '@/components/common/CommonSubHeader'
 
 export default {
-  name: 'SeminarMainPage',
+  name: 'SeminarAttendancePage',
   components: {
     'common-sub-header': CommonSubHeader,
   },
@@ -129,7 +129,7 @@ export default {
           this.hasAttendance = true
           this.$createToast({
             time: 500,
-            txt: '报名成功',
+            txt: '报名成功!',
             type: 'correct'
           }).show()
         }
@@ -155,7 +155,7 @@ export default {
           // ajax取消共享
           this.$createToast({
             time: 500,
-            txt: '取消成功',
+            txt: '取消成功！',
             type: 'correct'
           }).show()
         }

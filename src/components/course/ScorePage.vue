@@ -257,8 +257,7 @@ export default {
       }
     },
     role() {
-      return 'teacher'
-      // return this.$store.state.role
+      return this.$store.state.role
     },
     isMobile() {
       return this.$store.state.isMobile
