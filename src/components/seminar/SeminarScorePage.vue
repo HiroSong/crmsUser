@@ -68,12 +68,12 @@
       </div>
       <div v-else>
         <el-table :data="infoData" :show-header="false">
-          <el-table-column min-width="40%" :align="left">
+          <el-table-column min-width="40%" align="left">
             <template slot-scope="scope">
               <div class="content-text bold-text">{{scope.row.title}}</div>
             </template>
           </el-table-column>
-          <el-table-column min-width="60%" :align="left">
+          <el-table-column min-width="60%" align="left">
             <template slot-scope="scope">
               <div class="content-text">{{scope.row.content}}</div>
             </template>
@@ -126,8 +126,7 @@ export default {
   },
   computed: {
     role() {
-      return 'teacher'
-      // return this.$store.state.role
+      return this.$store.state.role
     },
     infoData() {
       return [{
