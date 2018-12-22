@@ -18,16 +18,72 @@
           </el-col>
         </el-row>
         <el-row class="small-gap">
-          <el-col :span="8">
+          <el-col :span="12">
             <div
-              class="red-text bold-text text-start"
+              class="orange-text bold-text text-start"
               style="font-size: 0.75rem;"
             >{{'第'+curAttendance+'组展示'}}</div>
           </el-col>
-          <el-col :span="16">
+          <el-col :span="12">
             <div class="tip-text text-end">{{'已有'+questionNum+'位同学提问'}}</div>
           </el-col>
         </el-row>
+        <el-row>
+          <el-col :span="12">
+            <div class="tip-text bold-text text-start">{{'已进行'+processTime+'分钟'}}</div>
+          </el-col>
+          <el-col :span="12">
+            <div class="orange-text text-end" style="font-size: 0.75rem" @click="listQuestion">查看</div>
+          </el-col>
+        </el-row>
+        <cube-scroll-nav-bar
+          :current="curSelectedAttendance"
+          :labels="labels"
+          :txts="txts"
+          @change="selectAttendance"
+        />
+        <div v-if="isPresentation">
+          <div class="tip-text bold-text text-center normal-gap">展示分数</div>
+          <el-row class="small-gap">
+            <el-col :span="16" :offset="4">
+              <cube-rate v-model="attendanceList[curSelectedAttendance].score"></cube-rate>
+            </el-col>
+          </el-row>
+        </div>
+        <div v-else>
+          <div class="tip-text bold-text text-center normal-gap">提问分数</div>
+          <div class="tip-text text-center small-gap">{{questionList[curSelectedQuestion]}}</div>
+          <el-row class="small-gap">
+            <el-col :span="16" :offset="4">
+              <cube-rate v-model="questionScoreList[curSelectedQuestion]"></cube-rate>
+            </el-col>
+          </el-row>
+        </div>
+        <el-row class="normal-gap" type="flex" justify="center">
+          <el-col :span="12">
+            <el-button
+              plain
+              class="orange-text full-width"
+              @click.native.prevent="nextQuestion"
+            >抽取问题</el-button>
+          </el-col>
+        </el-row>
+        <el-row class="small-gap" type="flex" justify="center">
+          <el-col :span="12">
+            <el-button
+              plain
+              class="orange-text full-width"
+              @click.native.prevent="nextAttendance"
+            >下组展示</el-button>
+          </el-col>
+        </el-row>
+        <cube-drawer
+          ref="questionDrawer"
+          title="提问列表"
+          :data="questionData"
+          class="content-text"
+          @select="selectQuestion"
+        ></cube-drawer>
       </div>
       <div v-else>
         <div class="content-text bold-text text-center">{{seminarName}}</div>
@@ -86,32 +142,58 @@ export default {
     return {
       courseName: 'OOAD',
       seminarName: '业务流程分析',
-      questionNum: 1,
       attendanceList: [{
         teamSerial: '1-1',
-        attendanceOrder: 1
+        attendanceOrder: 1,
+        score: 0
+      }, {
+        teamSerial: '1-2',
+        attendanceOrder: 2,
+        score: 0
+      }, {
+        teamSerial: '1-3',
+        attendanceOrder: 3,
+        score: 0
       }],
       curAttendance: 1,
-      scoreData: [{
-        teamSerial: '1-1',
-        presentationScore: 5,
-        questionScore: 5,
-        reportScore: 5,
-        sumScore: 5
-      }]
+      curSelectedAttendance: 0,
+      curQuestion: 0,
+      curSelectedQuestion: 0,
+      questionList: ['组号' + ' ' + '姓名', '111'],
+      questionData: [[]],
+      questionScoreList: [0, 0],
+      isPresentation: true,
+      reportEndTime: undefined,
+      processTime: 0
     }
   },
   computed: {
     role() {
-      return 'teacher'
-      // return this.$store.state.role
+      return this.$store.state.role
+    },
+    labels() {
+      let orderList = []
+      this.attendanceList.forEach((value, index, array) => {
+        orderList.push(value.attendanceOrder - 1)
+      })
+      return orderList
+    },
+    txts() {
+      let teamList = []
+      this.attendanceList.forEach((value, index, array) => {
+        teamList.push(value.attendanceOrder + ':' + value.teamSerial)
+      })
+      return teamList
+    },
+    questionNum() {
+      return this.questionList.length
     }
   },
   methods: {
     pauseSeminar() {
       this.$createDialog({
         type: 'confirm',
-        content: '确认暂停讨论课吗？',
+        content: '确认暂停本次讨论课吗？',
         onConfirm: () => {
           // 暂停讨论课操作
           this.$router.back()
@@ -133,6 +215,111 @@ export default {
         content: '请。同学 学号 提问',
         icon: 'cubeic-like'
       }).show()
+    },
+    listQuestion() {
+      this.$refs.questionDrawer.refill(0, this.questionList)
+      this.$refs.questionDrawer.show()
+    },
+    selectAttendance(cur) {
+      this.curSelectedAttendance = cur
+    },
+    selectQuestion(selectedVal, selectedIndex, selectedText) {
+      this.curSelectedQuestion = selectedIndex
+    },
+    nextQuestion() {
+      // 更新提问列表
+      if (this.curSelectedQuestion + 1 === this.questionList.length) {
+        this.$createToast({
+          time: 500,
+          txt: '当前已无新提问',
+          type: 'warn'
+        }).show()
+      } else {
+        this.isPresentation = false
+        this.curQuestion += 1
+        this.curSelectedQuestion = this.curQuestion
+      }
+    },
+    showEndTimePicker() {
+      this.$createDatePicker({
+        title: '截止时间',
+        min: new Date(),
+        max: new Date(2020, 9, 20, 20, 59, 59),
+        value: new Date(),
+        columnCount: 6,
+        format: {
+          year: 'YYYY',
+          month: 'MM',
+          date: 'dd',
+          hour: 'hh',
+          minute: 'mm',
+          second: 'ss'
+        },
+        onSelect: (date, selectedVal, selectedText) => {
+          selectedText = this.$datetimeFormat.format(selectedText)
+          this.$createDialog({
+            type: 'confirm',
+            title: '提示',
+            content: '确定将报告提交截止时间设置为' + this.$datetimeFormat.toPretty(selectedText) + '吗？',
+            onConfirm: () => {
+              this.reportEndTime = selectedText
+              // 设置
+              this.$createToast({
+                type: 'correct',
+                time: 500,
+                txt: '设置成功！',
+                onTimeout: () => {
+                  this.$router.back()
+                }
+              }).show()
+            },
+            onCancel: () => {
+              this.$createToast({
+                type: 'warn',
+                time: 500,
+                txt: '请重新设置！',
+                onTimeout: () => {
+                  this.showEndTimePicker()
+                }
+              }).show()
+            }
+          }).show()
+        },
+        onCancel: (date, selectedVal, selectedText) => {
+          this.$createToast({
+            type: 'warn',
+            time: 500,
+            txt: '请重新设置！',
+            onTimeout: () => {
+              this.showEndTimePicker()
+            }
+          }).show()
+        }
+      }).show()
+    },
+    nextAttendance() {
+      if (this.curSelectedAttendance + 1 === this.attendanceList.length) {
+        this.$createDialog({
+          type: 'confirm',
+          title: '提示',
+          content: '确定要结束讨论课吗？',
+          onConfirm: () => {
+            this.$createDialog({
+              type: 'alter',
+              title: '讨论课已结束',
+              content: '请设置报告提交截止时间',
+              onConfirm: () => {
+                this.showEndTimePicker()
+              }
+            }).show()
+          }
+        }).show()
+      } else {
+        this.processTime = 0
+        this.isPresentation = true
+        this.curAttendance += 1
+        this.curSelectedAttendance = this.curAttendance - 1
+      }
     }
   }
 }

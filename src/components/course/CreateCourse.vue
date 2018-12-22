@@ -34,7 +34,7 @@
         <cube-input
           v-model="courseInfo.startTime"
           placeholder="开始时间"
-          type="date-time"
+          type="datetime-local"
           :readonly="true"
           :disabled="true"
           class="small-gap content-text"
@@ -46,7 +46,7 @@
         <cube-input
           v-model="courseInfo.endTime"
           placeholder="截止时间"
-          type="date-time"
+          type="datetime-local"
           :readonly="true"
           :disabled="true"
           class="small-gap content-text"
@@ -236,8 +236,16 @@ export default {
         max: new Date(2020, 9, 20, 20, 59, 59),
         value: new Date(),
         columnCount: 6,
+        format: {
+          year: 'YYYY',
+          month: 'MM',
+          date: 'dd',
+          hour: 'hh',
+          minute: 'mm',
+          second: 'ss'
+        },
         onSelect: (date, selectedVal, selectedText) => {
-          this.courseInfo.startTime = selectedText.join('-')
+          this.courseInfo.startTime = this.$datetimeFormat.format(selectedText)
         }
       }).show()
     },
@@ -251,12 +259,20 @@ export default {
       } else {
         this.$createDatePicker({
           title: '结束时间',
-          min: new Date(),
-          max: new Date(2020, 9, 20, 20, 59, 59),
-          value: new Date(),
+          min: this.$datetimeFormat.toDate(this.courseInfo.startTime),
+          max: new Date(2020, 9, 20, 23, 59, 59),
+          value: this.$datetimeFormat.toDate(this.courseInfo.startTime),
           columnCount: 6,
+          format: {
+            year: 'YYYY',
+            month: 'MM',
+            date: 'dd',
+            hour: 'hh',
+            minute: 'mm',
+            second: 'ss'
+          },
           onSelect: (date, selectedVal, selectedText) => {
-            this.courseInfo.endTime = selectedText.join('-')
+            this.courseInfo.endTime = this.$datetimeFormat.format(selectedText)
           }
         }).show()
       }
@@ -295,14 +311,14 @@ export default {
         confirmBtn: {
           text: '确定',
           active: true,
-          disabled: false,
+          disabled: false
         },
         onConfirm: () => {
           rows.splice(index, 1)
         }
       }).show()
     },
-    createCourse(courseId) {
+    createCourse() {
       this.$createDialog({
         type: 'alert',
         title: '提示',

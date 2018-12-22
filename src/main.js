@@ -12,11 +12,14 @@ import Cube from 'cube-ui'
 import './assets/iconfont/iconfont.css'
 import './assets/iconfont/iconfont.js'
 
+import datetimeFormat from './util/datetime';
+
 Vue.config.productionTip = false
 Vue.use(ElementUI)
 Vue.use(Cube)
 
 Vue.prototype.$http = axios
+Vue.prototype.$datetimeFormat = datetimeFormat
 
 /* eslint-disable no-new */
 new Vue({
