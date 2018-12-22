@@ -2,7 +2,7 @@
   <div>
     <el-container>
       <el-header class="header">
-        <common-sub-header role="teacher" :is-mobile="true">新建课程</common-sub-header>
+        <common-sub-header role="teacher" :is-mobile="true">修改讨论课</common-sub-header>
       </el-header>
       <el-main class="main-gap">
         <cube-input
@@ -93,6 +93,16 @@
         <el-row type="flex" justify="center" class="normal-gap">
           <el-col :span="12">
             <el-button plain class="orange-text full-width" @click.native.prevent="modifySeminar">保存</el-button>
+          </el-col>
+        </el-row>
+        <el-row type="flex" justify="center" class="small-gap">
+          <el-col :span="12">
+            <el-button
+              type="danger"
+              plain
+              class="full-width"
+              @click.native.prevent="deleteSeminar"
+            >删除该讨论课</el-button>
           </el-col>
         </el-row>
       </el-main>
@@ -281,17 +291,29 @@ export default {
         }).show()
       }
     },
-    modifySeminar() {
+    deleteSeminar() {
       this.$createDialog({
-        type: 'alert',
+        type: 'confirm',
         title: '提示',
-        content: '修改成功',
-        confirmBtn: {
-          text: '确定',
-          active: true,
-          disabled: false
-        },
+        content: '确定删除该讨论课吗？',
         onConfirm: () => {
+          this.$createToast({
+            time: 500,
+            txt: '删除成功',
+            type: 'correct',
+            onTimeOut: () => {
+              this.$router.back()
+            }
+          }).show()
+        }
+      })
+    },
+    modifySeminar() {
+      this.$createToast({
+        time: 500,
+        txt: '修改成功',
+        type: 'correct',
+        onTimeOut: () => {
           this.$router.back()
         }
       }).show()

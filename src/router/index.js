@@ -119,7 +119,7 @@ const router = new Router({
     path: '/seminar/main',
     name: 'SeminarMainPage',
     meta: {
-      title: '课程列表'
+      title: '讨论课总界面'
     },
     component: resolve => require(['@/components/seminar/SeminarMainPage'], resolve)
   }, {

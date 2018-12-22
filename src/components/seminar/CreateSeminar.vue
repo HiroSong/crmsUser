@@ -2,7 +2,7 @@
   <div>
     <el-container>
       <el-header class="header">
-        <common-sub-header role="teacher" :is-mobile="true">新建课程</common-sub-header>
+        <common-sub-header role="teacher" :is-mobile="true">新建讨论课</common-sub-header>
       </el-header>
       <el-main class="main-gap">
         <cube-input
@@ -232,16 +232,11 @@ export default {
       this.seminarInfo.orderStatus = this.seminarInfo.isChosenAttendanceOrder ? '自选' : '系统默认'
     },
     createSeminar() {
-      this.$createDialog({
-        type: 'alert',
-        title: '提示',
-        content: '发布成功',
-        confirmBtn: {
-          text: '确定',
-          active: true,
-          disabled: false
-        },
-        onConfirm: () => {
+      this.$createToast({
+        time: 500,
+        txt: '发布成功',
+        type: 'correct',
+        onTimeOut: () => {
           this.$router.back()
         }
       }).show()
