@@ -16,6 +16,7 @@
             <el-col :span="4">
               <!-- 若为当前所在小组则显示 -->
               <el-button
+                v-if="role!=='teacher'"
                 type="text"
                 plain
                 class="iconfont icon-xuesheng orange-text full-width"
@@ -70,7 +71,7 @@
         </el-collapse-item>
       </el-collapse>
       <!-- 根据是否已经组队决定是否显示 -->
-      <el-row type="flex" justify="center">
+      <el-row type="flex" justify="center" v-if="role!=='teacher'">
         <el-col :span="12">
           <el-button
             plain

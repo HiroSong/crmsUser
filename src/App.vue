@@ -51,6 +51,10 @@ body {
   font-size: 1rem;
 }
 
+.el-upload {
+  width: 100%;
+}
+
 .header {
   background-color: #ffffff;
   line-height: 3.75rem;

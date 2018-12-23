@@ -20,7 +20,7 @@
           </template>
         </el-table-column>
       </el-table>
-      <el-row class="big-gap" type="flex" justify="end">
+      <el-row v-if="role==='teacher'" class="big-gap" type="flex" justify="end">
         <div class="orange-text" style="font-size: 0.875rem;" @click="showSeminarPicker">正在进行的讨论课</div>
       </el-row>
     </el-main>
@@ -40,6 +40,11 @@ export default {
       courseList: [{
         name: 'OOAD'
       }]
+    }
+  },
+  computed: {
+    role() {
+      return this.$store.state.role
     }
   },
   methods: {

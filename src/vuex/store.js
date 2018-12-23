@@ -6,7 +6,8 @@ Vue.use(Vuex)
 // 1、state：创建初始化状态
 const state = {
   token: window.sessionStorage.getItem('token'),
-  role: window.sessionStorage.getItem('role'),
+  role: 'teacher',
+  // role: window.sessionStorage.getItem('role'),
   id: window.sessionStorage.getItem('id'),
   screenWidth: document.documentElement.clientWidth,
   screenHeight: document.documentElement.clientHeight,

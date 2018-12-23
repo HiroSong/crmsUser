@@ -9,27 +9,33 @@
         <div class="text-center content-text">2016-1</div>
       </el-row>
       <el-row class="small-gap" type="flex" justify="center">
-        <el-col class="text-center content-text">讨论课时间</el-col>
-        <el-col class="text-center content-text">周三7、8节</el-col>
+        <el-col class="text-start content-text">讨论课时间</el-col>
+        <el-col class="text-start content-text">周三7、8节</el-col>
       </el-row>
       <el-row class="small-gap" type="flex" justify="center">
-        <el-col class="text-center content-text">讨论课地点</el-col>
-        <el-col class="text-center content-text">海韵教学楼</el-col>
+        <el-col class="text-start content-text">讨论课地点</el-col>
+        <el-col class="text-start content-text">海韵教学楼</el-col>
       </el-row>
       <el-row class="small-gap" type="flex" justify="center">
-        <el-col class="text-center content-text">课程学生名单</el-col>
-        <el-col class="text-center content-text">周三56节.xlsx</el-col>
+        <el-col class="text-start content-text">课程学生名单</el-col>
+        <el-col class="text-start content-text">周三56节.xlsx</el-col>
       </el-row>
       <el-row class="small-gap" type="flex" justify="center">
-        <el-button size="small" class="orange-text">选择文件</el-button>
-      </el-row>
-      <el-row class="small-gap" type="flex" justify="center">
-        <el-button size="small" class="orange-text">删除班级</el-button>
+        <el-col :span="8">
+          <el-upload action="上传地址" :limit="1" :multiple="false" :show-file-list="false">
+            <el-button size="small" class="orange-text full-width">选择文件</el-button>
+          </el-upload>
+        </el-col>
+        <el-col :span="8" :offset="2">
+          <el-button size="small" type="danger" plain class="full-width">删除班级</el-button>
+        </el-col>
       </el-row>
       <el-row class="normal-gap" type="flex" justify="center">
-        <router-link to="/course/class/create" class="no-decoration">
-          <el-button size="medium" class="orange-text">新增班级</el-button>
-        </router-link>
+        <el-col :span="12">
+          <router-link to="/course/class/create" class="no-decoration">
+            <el-button class="orange-text full-width">新增班级</el-button>
+          </router-link>
+        </el-col>
       </el-row>
     </el-main>
   </el-container>

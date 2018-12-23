@@ -15,7 +15,9 @@
         class="normal-gap"
       ></cube-input>
       <el-row type="flex" justify="end" class="small-gap">
-        <div class="tip-text">* 可包含数字、字母、下划线，长度不小于6位</div>
+        <div class="tip-text text-end">* 可包含数字、字母、下划线，
+          <br>长度不小于6位
+        </div>
       </el-row>
       <cube-input
         v-model="passwordConfirm"
@@ -26,7 +28,7 @@
         :eye="{open:false, reverse:false}"
         class="normal-gap"
       ></cube-input>
-      <div v-if="role==='student'">
+      <div v-if="role!=='teacher'">
         <cube-input
           v-model="email"
           placeholder="请输入邮箱"

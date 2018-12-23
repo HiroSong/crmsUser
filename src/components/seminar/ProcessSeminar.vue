@@ -37,6 +37,7 @@
           </el-col>
         </el-row>
         <cube-scroll-nav-bar
+          ref="AttendanceNavBar"
           :current="curSelectedAttendance"
           :labels="labels"
           :txts="txts"
@@ -59,6 +60,16 @@
             </el-col>
           </el-row>
         </div>
+        <el-row
+          v-if="curSelectedAttendance!==curAttendance||curSelectedQuestion!==curQuestion"
+          class="normal-gap"
+          type="flex"
+          justify="center"
+        >
+          <el-col :span="12">
+            <el-button plain class="orange-text full-width" @click.native.prevent="modifyScore">修改分数</el-button>
+          </el-col>
+        </el-row>
         <el-row class="normal-gap" type="flex" justify="center">
           <el-col :span="12">
             <el-button
@@ -221,10 +232,29 @@ export default {
       this.$refs.questionDrawer.show()
     },
     selectAttendance(cur) {
-      this.curSelectedAttendance = cur
+      if (cur > this.curAttendance) {
+        this.$refs.AttendanceNavBar.active = this.curSelectedAttendance
+        this.$createToast({
+          type: 'warn',
+          time: 500,
+          txt: '该展示未开始！'
+        }).show()
+      } else {
+        this.isPresentation = true
+        this.curSelectedAttendance = cur
+      }
     },
     selectQuestion(selectedVal, selectedIndex, selectedText) {
-      this.curSelectedQuestion = selectedIndex
+      if (selectedIndex > this.curQuestion) {
+        this.$createToast({
+          type: 'warn',
+          time: 500,
+          txt: '该提问未开始！'
+        }).show()
+      } else {
+        this.isPresentation = false
+        this.curSelectedQuestion = selectedIndex
+      }
     },
     nextQuestion() {
       // 更新提问列表
@@ -320,6 +350,13 @@ export default {
         this.curAttendance += 1
         this.curSelectedAttendance = this.curAttendance - 1
       }
+    },
+    modifyScore() {
+      this.$createToast({
+        type: 'correct',
+        time: 500,
+        txt: '修改成功!'
+      }).show()
     }
   }
 }

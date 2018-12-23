@@ -5,6 +5,7 @@
     </el-header>
     <el-main class="main-gap">
       <cube-input v-model="name" placeholder="请输入小组名" :clearable="true" class="content-text"></cube-input>
+      <cube-select class="small-gap" v-model="classId" :options="classOptions" placeholder="请选择班级"></cube-select>
       <el-row>
         <div class="content-text small-gap">添加成员</div>
       </el-row>
@@ -32,6 +33,11 @@ export default {
   },
   data() {
     return {
+      classId: undefined,
+      classOptions: [{
+        value: 1,
+        text: '2016(1)'
+      }],
       ungroupedList: [{
         label: '学号-姓名',
         value: 'id1'

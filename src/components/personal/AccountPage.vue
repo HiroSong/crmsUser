@@ -98,12 +98,6 @@ export default {
         name: '学号',
         value: undefined
       }, {
-        name: '性别',
-        value: undefined
-      }, {
-        name: '生日',
-        value: undefined
-      }, {
         name: '联系方式',
         value: undefined
       }, {

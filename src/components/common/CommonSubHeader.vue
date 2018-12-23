@@ -20,7 +20,7 @@
           <router-link to="/home" class="no-decoration">
             <el-dropdown-item class="tip-text">个人页</el-dropdown-item>
           </router-link>
-          <router-link to="/seminar" class="no-decoration">
+          <router-link to="/seminar/main" class="no-decoration">
             <el-dropdown-item class="tip-text">讨论课</el-dropdown-item>
           </router-link>
         </el-dropdown-menu>

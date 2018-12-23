@@ -32,7 +32,7 @@
             <el-col :span="12">
               <el-button
                 plain
-                class="orange-text full-text"
+                class="orange-text full-width"
                 @click.native.prevent="enterProcess"
               >进入讨论课</el-button>
             </el-col>
@@ -43,7 +43,7 @@
             <el-col :span="12">
               <el-button
                 plain
-                class="orange-text full-text"
+                class="orange-text full-width"
                 @click.native.prevent="continueSeminar"
               >继续讨论课</el-button>
             </el-col>
@@ -54,7 +54,7 @@
             <el-col :span="12">
               <el-button
                 plain
-                class="orange-text full-text"
+                class="orange-text full-width"
                 @click.native.prevent="enterProcess"
               >开始讨论课</el-button>
             </el-col>
@@ -65,14 +65,18 @@
             <el-col :span="12">
               <el-button
                 plain
-                class="orange-text full-text"
+                class="orange-text full-width"
                 @click.native.prevent="setReportScore"
               >书面报告评分</el-button>
             </el-col>
           </el-row>
           <el-row type="flex" justify="center" class="small-gap">
             <el-col :span="12">
-              <el-button plain class="orange-text full-text" @click.native.prevent="enterScore">查看成绩</el-button>
+              <el-button
+                plain
+                class="orange-text full-width"
+                @click.native.prevent="enterScore"
+              >查看成绩</el-button>
             </el-col>
           </el-row>
         </div>
@@ -83,15 +87,15 @@
             <el-col :span="12">
               <el-button
                 plain
-                class="orange-text full-text"
+                class="orange-text full-width"
                 @click.native.prevent="enterProcess"
               >进入讨论课</el-button>
             </el-col>
           </el-row>
           <el-row v-if="attendanceId!==undefined" type="flex" justify="center" class="small-gap">
             <el-col :span="12">
-              <el-upload action="上传地址" :limit="1" :multiple="false">
-                <el-button plain class="orange-text full-text">PPT提交</el-button>
+              <el-upload action="上传地址" :limit="1" :multiple="false" :show-file-list="false">
+                <el-button plain class="orange-text full-width">PPT提交</el-button>
               </el-upload>
             </el-col>
           </el-row>
@@ -131,8 +135,8 @@
             </el-table>
             <el-row type="flex" justify="center" class="small-gap">
               <el-col :span="12">
-                <el-upload action="上传地址" :limit="1" :multiple="false">
-                  <el-button plain class="orange-text full-text">PPT提交</el-button>
+                <el-upload action="上传地址" :limit="1" :multiple="false" :show-file-list="false">
+                  <el-button plain class="orange-text full-width">PPT提交</el-button>
                 </el-upload>
               </el-col>
             </el-row>
@@ -154,7 +158,7 @@
               <el-col :span="12">
                 <el-button
                   plain
-                  class="orange-text full-text"
+                  class="orange-text full-width"
                   @click.native.prevent="enterAttendance"
                 >报名</el-button>
               </el-col>
@@ -186,8 +190,8 @@
             </el-table>
             <el-row type="flex" justify="center" class="small-gap">
               <el-col :span="12">
-                <el-upload action="上传地址" :limit="1" :multiple="false">
-                  <el-button plain class="orange-text full-text">书面报告提交</el-button>
+                <el-upload action="上传地址" :limit="1" :multiple="false" :show-file-list="false">
+                  <el-button plain class="orange-text full-width">书面报告提交</el-button>
                 </el-upload>
               </el-col>
             </el-row>
@@ -217,7 +221,7 @@
               <el-col :span="12">
                 <el-button
                   plain
-                  class="orange-text full-text"
+                  class="orange-text full-width"
                   @click.native.prevent="enterScore"
                 >查看成绩</el-button>
               </el-col>
@@ -285,7 +289,7 @@
               <el-col :span="6">展示次序</el-col>
               <el-col :span="6">小组序号</el-col>
               <el-col :span="6">组长</el-col>
-              <el-col :span="6" v-if="seminarInfo.status==='已结束'">展示报告</el-col>
+              <el-col :span="6" v-if="seminarInfo.status==='已完成'">展示报告</el-col>
               <el-col :span="6" v-else>展示材料</el-col>
             </el-row>
           </div>
@@ -301,7 +305,7 @@
                       <div v-if="scope.row.pptStatus===true">已上传</div>
                       <div v-else-if="scope.row.pptStatus===false">未上传</div>
                     </div>
-                    <div v-else-if="seminarInfo.status==='已结束'">
+                    <div v-else-if="seminarInfo.status==='已完成'">
                       <el-button plain size="small" v-if="scope.row.reportStatus===true">下载</el-button>
                       <div v-else-if="scope.row.reportStatus===false">未上传</div>
                     </div>
@@ -322,7 +326,7 @@
               <el-col :span="5">展示次序</el-col>
               <el-col :span="5">小组序号</el-col>
               <el-col :span="5">组长</el-col>
-              <el-col :span="5" v-if="seminarInfo.status==='已结束'">展示报告</el-col>
+              <el-col :span="5" v-if="seminarInfo.status==='已完成'">展示报告</el-col>
               <el-col :span="5" v-else>展示材料</el-col>
             </el-row>
           </div>
@@ -352,7 +356,7 @@
                         <div v-else-if="scope.row.pptStatus===false">未上传</div>
                       </div>
                     </div>
-                    <div v-else-if="seminarInfo.status==='已结束'">
+                    <div v-else-if="seminarInfo.status==='已完成'">
                       <el-button plain size="small" v-if="scope.row.reportStatus===true">下载</el-button>
                       <div v-else-if="scope.row.reportStatus===false">未上传</div>
                     </div>
@@ -373,7 +377,7 @@
                       <div v-if="seminarInfo.status==='未开始'">
                         <el-button plain size="small">取消报名</el-button>
                       </div>
-                      <div v-else-if="seminarInfo.status==='已结束'">
+                      <div v-else-if="seminarInfo.status==='已完成'">
                         <el-button plain size="small" v-if="scope.row.reportStatus===true">重新上传</el-button>
                         <el-upload
                           ref="upload"

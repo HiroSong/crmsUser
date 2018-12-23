@@ -10,10 +10,10 @@
             <router-link to="/course/score" class="no-decoration tip-text">学生成绩</router-link>
           </el-row>
           <el-row type="flex" justify="center">
-            <router-link to="/course/group" class="no-decoration tip-text">学生组队</router-link>
+            <router-link to="/team" class="no-decoration tip-text">学生组队</router-link>
           </el-row>
           <el-row type="flex" justify="center">
-            <router-link to="/course/course-info" class="no-decoration tip-text">课程信息</router-link>
+            <router-link to="/course/info" class="no-decoration tip-text">课程信息</router-link>
           </el-row>
           <el-row type="flex" justify="center">
             <router-link to="/course/class" class="no-decoration tip-text">班级信息</router-link>
@@ -22,7 +22,7 @@
             <router-link to="/seminar/course" class="no-decoration tip-text">讨论课设置</router-link>
           </el-row>
           <el-row type="flex" justify="center">
-            <router-link to="/seminar/share" class="no-decoration tip-text">共享设置</router-link>
+            <router-link to="/application" class="no-decoration tip-text">共享设置</router-link>
           </el-row>
         </el-collapse-item>
         <el-collapse-item v-else title="OOAD 2016-(1)" name="1">
@@ -33,7 +33,7 @@
             <router-link to="/course/score" class="no-decoration tip-text">我的成绩</router-link>
           </el-row>
           <el-row type="flex" justify="center">
-            <router-link to="/course/group" class="no-decoration tip-text">我的组队</router-link>
+            <router-link to="/team" class="no-decoration tip-text">我的组队</router-link>
           </el-row>
         </el-collapse-item>
       </el-collapse>

@@ -2,7 +2,7 @@
   <el-container v-if="isMobile">
     <el-header class="header">
       <common-sub-header v-if="role==='teacher'" :role="role" :is-mobile="true">学生成绩</common-sub-header>
-      <common-sub-header v-else :role="role" :is-mobile="true">{{scoreTitle}}</common-sub-header>
+      <common-sub-header v-else :role="role" :is-mobile="true">{{modifiedTitle}}</common-sub-header>
     </el-header>
     <el-main class="main-gap">
       <div v-if="role==='teacher'">

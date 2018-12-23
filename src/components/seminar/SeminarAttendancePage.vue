@@ -14,6 +14,7 @@
           <template slot-scope="scope">
             <div v-if="scope.row.teamSerial===undefined&&seminarStatus==='未开始'">
               <div
+                v-if="role!=='teacher'"
                 class="el-icon-circle-plus-outline green-text"
                 style="font-size:0.875rem;"
                 @click="regiestSeminar"
@@ -48,7 +49,7 @@
         </el-table-column>
       </el-table>
       <el-row
-        v-show="hasAttendance&&seminarStatus==='未开始'"
+        v-show="hasAttendance&&seminarStatus==='未开始'&&role!=='teacher'"
         class="normal-gap"
         type="flex"
         justify="center"
