@@ -8,11 +8,18 @@ const datetimeFormat = {
     let date = parseInt(data.substring(8, 10))
     let hour = parseInt(data.substring(11, 13))
     let minute = parseInt(data.substring(14, 16))
-    let second = parseInt(data.substring(17))
+    let second = parseInt(data.substring(17, 19))
     return new Date(year, month, date, hour, minute, second)
   },
   toPretty: (data) => {
     return data.replace(/T/g, ' ')
+  },
+  getToday: () => {
+    let date = (new Date()).toISOString()
+    let year = parseInt(date.substring(0, 4))
+    let month = parseInt(date.substring(5, 7))
+    let day = parseInt(date.substring(8, 10))
+    return (new Date(year, month, day, 23, 59, 59)).toISOString().substring(0, 19)
   }
 }
 

@@ -5,17 +5,8 @@
     </el-header>
     <el-main>
       <div v-if="role==='teacher'">
-        <el-row type="flex" justify="end">
-          <el-col :span="16">
-            <div class="content-text bold-text text-center">{{seminarName}}</div>
-          </el-col>
-          <el-col :span="4">
-            <div
-              class="iconfont icon-zanting red-text bold-text"
-              style="font-size: 0.875rem"
-              @click="pauseSeminar"
-            ></div>
-          </el-col>
+        <el-row type="flex" justify="center">
+          <div class="content-text bold-text text-center">{{seminarName}}</div>
         </el-row>
         <el-row class="small-gap">
           <el-col :span="12">
@@ -201,16 +192,6 @@ export default {
     }
   },
   methods: {
-    pauseSeminar() {
-      this.$createDialog({
-        type: 'confirm',
-        content: '确认暂停本次讨论课吗？',
-        onConfirm: () => {
-          // 暂停讨论课操作
-          this.$router.back()
-        }
-      }).show()
-    },
     sendQuestion() {
       // 学生发起提问
       this.$createToast({
@@ -304,6 +285,54 @@ export default {
               }).show()
             },
             onCancel: () => {
+              this.$createDialog({
+                type: 'confirm',
+                title: '提示',
+                content: '默认将报告提交截止时间设置为' + this.$datetimeFormat.toPretty(this.$datetimeFormat.getToday()) + '，确定吗？',
+                onConfirm: () => {
+                  this.reportEndTime = selectedText
+                  // 设置
+                  this.$createToast({
+                    type: 'correct',
+                    time: 500,
+                    txt: '设置成功！',
+                    onTimeout: () => {
+                      this.$router.back()
+                    }
+                  }).show()
+                },
+                onCancel: () => {
+                  this.$createToast({
+                    type: 'warn',
+                    time: 500,
+                    txt: '请重新设置！',
+                    onTimeout: () => {
+                      this.showEndTimePicker()
+                    }
+                  }).show()
+                }
+              }).show()
+            }
+          }).show()
+        },
+        onCancel: (date, selectedVal, selectedText) => {
+          this.$createDialog({
+            type: 'confirm',
+            title: '提示',
+            content: '默认将报告提交截止时间设置为' + this.$datetimeFormat.toPretty(this.$datetimeFormat.getToday()) + '，确定吗？',
+            onConfirm: () => {
+              this.reportEndTime = selectedText
+              // 设置
+              this.$createToast({
+                type: 'correct',
+                time: 500,
+                txt: '设置成功！',
+                onTimeout: () => {
+                  this.$router.back()
+                }
+              }).show()
+            },
+            onCancel: () => {
               this.$createToast({
                 type: 'warn',
                 time: 500,
@@ -312,16 +341,6 @@ export default {
                   this.showEndTimePicker()
                 }
               }).show()
-            }
-          }).show()
-        },
-        onCancel: (date, selectedVal, selectedText) => {
-          this.$createToast({
-            type: 'warn',
-            time: 500,
-            txt: '请重新设置！',
-            onTimeout: () => {
-              this.showEndTimePicker()
             }
           }).show()
         }

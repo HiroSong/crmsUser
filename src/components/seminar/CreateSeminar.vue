@@ -34,21 +34,6 @@
           </el-col>
         </el-row>
         <cube-form :model="seminarInfo" :schema="schemaSeminar" class="content-text small-gap"></cube-form>
-        <el-row class="small-gap">
-          <el-col :span="12">
-            <div class="content-text">报名顺序</div>
-          </el-col>
-          <el-col :span="6">
-            <el-switch
-              v-model="seminarInfo.isChosenAttendanceOrder"
-              active-color="#fc9153"
-              @change="setOrderStatus"
-            ></el-switch>
-          </el-col>
-          <el-col :span="6">
-            <div class="content-text">{{orderStatus}}</div>
-          </el-col>
-        </el-row>
         <el-row>
           <div class="small-gap content-text">展示报名开始时间</div>
         </el-row>
@@ -103,8 +88,7 @@ export default {
         teamLimit: 1,
         isChosenAttendanceOrder: true,
         round: undefined,
-        visibleStatus: '可见',
-        orderStatus: '自选'
+        visibleStatus: '可见'
       },
       orderOptions: [{
         value: 1,
@@ -137,9 +121,6 @@ export default {
   computed: {
     visibleStatus() {
       return this.seminarInfo.visibleStatus
-    },
-    orderStatus() {
-      return this.seminarInfo.orderStatus
     },
     schemaSeminar() {
       return {
@@ -227,9 +208,6 @@ export default {
     },
     setVisibleStatus() {
       this.seminarInfo.visibleStatus = this.seminarInfo.isVisible ? '可见' : '不可见'
-    },
-    setOrderStatus() {
-      this.seminarInfo.orderStatus = this.seminarInfo.isChosenAttendanceOrder ? '自选' : '系统默认'
     },
     createSeminar() {
       this.$createToast({

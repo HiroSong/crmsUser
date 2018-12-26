@@ -90,7 +90,7 @@
           >保存</el-button>
         </el-row>
       </div>
-      <div v-else>
+      <div v-else-if="isExpired===false">
         <el-row type="flex" justify="end">
           <el-button
             type="danger"
@@ -117,6 +117,7 @@ export default {
     return {
       isLeader: true,
       isInvalid: true,
+      isExpired: true,
       ungroupedList: [{
         label: '学号-姓名',
         value: 'id1'

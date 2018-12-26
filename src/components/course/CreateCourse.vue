@@ -19,17 +19,61 @@
         </el-row>
         <cube-form :model="courseInfo" :schema="schemaScore" class="content-text"></cube-form>
         <el-row>
-          <div class="small-gap content-text">小组人数</div>
+          <div class="normal-gap content-text">组员基本要求</div>
+        </el-row>
+        <el-row>
+          <div class="small-gap tip-text bold-text">小组总人数(包括组长)</div>
         </el-row>
         <cube-input
           v-model="courseInfo.maxNum"
           placeholder="上限"
           type="number"
-          class="small-gap content-text"
+          class="small-gap tip-text"
         ></cube-input>
-        <cube-input v-model="courseInfo.minNum" placeholder="下限" type="number" class="content-text"></cube-input>
+        <cube-input v-model="courseInfo.minNum" placeholder="下限" type="number" class="tip-text"></cube-input>
+        <el-row class="small-gap" type="flex" justify="space-between">
+          <div class="tip-text bold-text">组内选修课程人数</div>
+          <div class="el-icon-circle-plus-outline orange-text" @click="showNumLimitCourse"></div>
+        </el-row>
+        <el-table
+          :data="courseInfo.numLimitCourse"
+          header-row-class-name="tip-text bold-text"
+          row-class-name="tip-text"
+        >
+          <el-table-column label="课程" prop="course" align="center" min-width="40%">
+            <template slot-scope="scope">
+              <div class="tip-text">{{scope.row.course+"("+scope.row.teacher+")"}}</div>
+            </template>
+          </el-table-column>
+          <el-table-column label="上限" prop="maxNum" align="center" min-width="20%"></el-table-column>
+          <el-table-column label="下限" prop="minNum" align="center" min-width="20%"></el-table-column>
+          <el-table-column align="center" min-width="20%">
+            <template slot-scope="scope">
+              <div
+                class="el-icon-circle-close-outline orange-text"
+                @click="deleteSelect(scope.$index,courseInfo.numLimitCourse)"
+              ></div>
+            </template>
+          </el-table-column>
+        </el-table>
+        <div v-if="numLimitCourseNum>1" class="small-gap">
+          <el-row>
+            <div class="tip-text bold-text">选修课人数要求</div>
+          </el-row>
+          <cube-select
+            v-model="courseInfo.numLimitRule"
+            :options="numLimitRuleOptions"
+            placeholder="请选择"
+            class="small-gap tip-text"
+          ></cube-select>
+          <el-row type="flex" justify="end" class="small-gap">
+            <div class="tip-text text-end">* 均满足指选课人数均需达到要求
+              <br>满足其一指任意选课人数满足即可
+            </div>
+          </el-row>
+        </div>
         <el-row>
-          <div class="small-gap content-text">组队开始时间</div>
+          <div class="normal-gap content-text">组队开始时间</div>
         </el-row>
         <cube-input
           v-model="courseInfo.startTime"
@@ -54,7 +98,7 @@
         ></cube-input>
         <el-row class="small-gap" type="flex" justify="space-between">
           <div class="content-text">冲突课程</div>
-          <div class="el-icon-circle-plus-outline orange-text" @click="showCourse"></div>
+          <div class="el-icon-circle-plus-outline orange-text" @click="showConflictCourse"></div>
         </el-row>
         <el-dialog title="选择课程" :visible.sync="dialogVisible" width="80vw" class="content-text">
           <el-select
@@ -73,26 +117,47 @@
               class="content-text"
             ></el-option>
           </el-select>
+          <div v-if="dialogType">
+            <cube-input
+              v-model="selectedLimit.maxNum"
+              placeholder="上限"
+              type="number"
+              class="tip-text"
+            ></cube-input>
+            <cube-input
+              v-model="selectedLimit.minNum"
+              placeholder="下限"
+              type="number"
+              class="tip-text"
+            ></cube-input>
+          </div>
           <span slot="footer" class="dialog-footer">
-            <el-button plain class="orange-text" @click.native.prevent="setConflictCourse">确定</el-button>
+            <el-button
+              v-if="dialogType"
+              plain
+              class="orange-text"
+              @click.native.prevent="setNumLimitCourse"
+            >确定</el-button>
+            <el-button v-else plain class="orange-text" @click.native.prevent="setConflictCourse">确定</el-button>
           </span>
         </el-dialog>
-        <el-table
-          :data="courseInfo.conflictCourse"
-          :show-header="false"
-          row-class-name="content-text"
-        >
+        <el-table :data="courseInfo.conflictCourse" :show-header="false" row-class-name="tip-text">
           <el-table-column prop="course" align="center"></el-table-column>
           <el-table-column prop="teacher" align="center"></el-table-column>
           <el-table-column align="center">
             <template slot-scope="scope">
               <div
                 class="el-icon-circle-close-outline orange-text"
-                @click="deleteConflictCourse(scope.$index,courseInfo.conflictCourse)"
+                @click="deleteSelect(scope.$index,courseInfo.conflictCourse)"
               ></div>
             </template>
           </el-table-column>
         </el-table>
+        <el-row type="flex" justify="end" class="small-gap">
+          <div class="tip-text text-end">* 选修不同冲突课程的学生不可同组
+            <br>注意同课程名不同教师为不同课程
+          </div>
+        </el-row>
         <el-row type="flex" justify="center" class="normal-gap">
           <el-col :span="12">
             <el-button plain class="orange-text full-width" @click.native.prevent="createCourse">发布</el-button>
@@ -123,12 +188,21 @@ export default {
         maxNum: undefined,
         startTime: undefined,
         endTime: undefined,
+        numLimitCourse: [],
+        numLimitRule: undefined,
         conflictCourse: [{
           course: 'J2EE',
           teacher: '邱明',
           id: 1
         }]
       },
+      numLimitRuleOptions: [{
+        value: true,
+        text: "均满足"
+      }, {
+        value: false,
+        text: "满足其一"
+      }],
       options: [{
         value: 1,
         text: '100%'
@@ -163,9 +237,15 @@ export default {
         value: 0,
         text: '0%'
       }],
+      totalCourseList: [],
       courseList: [],
       dialogVisible: false,
-      selectedCourse: undefined
+      dialogType: true,
+      selectedCourse: undefined,
+      selectedLimit: {
+        minNum: undefined,
+        maxNum: undefined
+      }
     }
   },
   computed: {
@@ -226,6 +306,9 @@ export default {
           }
         }]
       }
+    },
+    numLimitCourseNum() {
+      return this.courseInfo.numLimitCourse.length
     }
   },
   methods: {
@@ -277,16 +360,26 @@ export default {
         }).show()
       }
     },
-    getCourse() {
-      //记得返回的是未选取过的课程
+    getCourseOption() {
+      // 根据dialogType决定筛选方法
+      // 从totalCourse中选择
+      // 记得返回的是未选取过的课程
       this.courseList = []
       this.courseList.push({
         label: '.Net' + '(' + '杨律青' + ')',
         value: 1
       })
     },
-    showCourse() {
-      this.getCourse()
+    showNumLimitCourse() {
+      this.dialogType = true
+      this.showCourseOption()
+    },
+    showConflictCourse() {
+      this.dialogType = false
+      this.showCourseOption()
+    },
+    showCourseOption() {
+      this.getCourseOption()
       this.dialogVisible = true
     },
     getSingleCourse(courseId) {
@@ -296,13 +389,23 @@ export default {
         id: 2
       }
     },
+    setNumLimitCourse() {
+      let singleCourse = this.getSingleCourse(this.selectedCourse)
+      singleCourse.minNum = this.selectedLimit.minNum
+      singleCourse.maxNum = this.selectedLimit.maxNum
+      this.courseInfo.numLimitCourse.push(singleCourse)
+      this.dialogVisible = false
+      this.selectedCourse = undefined
+      this.selectedLimit.minNum = undefined
+      this.selectedLimit.maxNum = undefined
+    },
     setConflictCourse() {
       let course = this.getSingleCourse(this.selectedCourse)
       this.courseInfo.conflictCourse.push(course)
       this.dialogVisible = false
       this.selectedCourse = undefined
     },
-    deleteConflictCourse(index, rows) {
+    deleteSelect(index, rows) {
       this.$createDialog({
         type: 'alert',
         title: '提示',

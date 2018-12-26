@@ -6,9 +6,7 @@ Vue.use(Vuex)
 // 1、state：创建初始化状态
 const state = {
   token: window.sessionStorage.getItem('token'),
-  role: 'teacher',
-  // role: window.sessionStorage.getItem('role'),
-  id: window.sessionStorage.getItem('id'),
+  role: window.sessionStorage.getItem('role'),
   screenWidth: document.documentElement.clientWidth,
   screenHeight: document.documentElement.clientHeight,
   isCollapse: false,
@@ -25,7 +23,6 @@ const mutations = {
     state.id = payload.id
     window.sessionStorage.setItem('token', payload.token)
     window.sessionStorage.setItem('role', payload.role)
-    window.sessionStorage.setItem('id', payload.id)
   },
   CLEAR_AUTH(state) {
     state.token = undefined
@@ -33,7 +30,6 @@ const mutations = {
     state.id = undefined
     window.sessionStorage.setItem('token', undefined)
     window.sessionStorage.setItem('role', undefined)
-    window.sessionStorage.setItem('id', undefined)
   },
   SET_COLLAPSE(state, payload) {
     state.isCollapse = payload.isCollapse

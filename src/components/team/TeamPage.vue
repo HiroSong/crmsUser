@@ -4,30 +4,25 @@
       <common-sub-header :role="role" :is-mobile="true">组队</common-sub-header>
     </el-header>
     <el-main class="main-gap">
+      <!-- 有小组才显示 -->
+      <div v-if="role!=='teacher'" @click="enterTeamInfo" style="height: 5vh;">
+        <el-row>
+          <el-col :span="16" :offset="4">
+            <div
+              class="iconfont icon-xuesheng orange-text full-width text-center"
+              style="font-size: 0.75rem;"
+            >&nbsp;组编号&nbsp;组名(我的小组)</div>
+          </el-col>
+          <!-- 若状态为invalid才显示 -->
+          <el-col :span="4">
+            <div class="red-text text-center" style="font-size: 0.75rem;">invalid</div>
+          </el-col>
+        </el-row>
+      </div>
       <el-collapse accordion>
         <el-collapse-item>
           <template slot="title">
-            <el-col :span="8">
-              <div class="iconfont icon-xiaozu content-text">&nbsp;组编号</div>
-            </el-col>
-            <el-col :span="8">
-              <div class="content-text">组名</div>
-            </el-col>
-            <el-col :span="4">
-              <!-- 若为当前所在小组则显示 -->
-              <el-button
-                v-if="role!=='teacher'"
-                type="text"
-                plain
-                class="iconfont icon-xuesheng orange-text full-width"
-                style="font-size: 0.75rem;"
-                @click.native.prevent="enterTeamInfo"
-              >进入</el-button>
-            </el-col>
-            <el-col :span="4">
-              <!-- 若状态为invalid才显示 -->
-              <div class="red-text text-center" style="font-size: 0.75rem;">invalid</div>
-            </el-col>
+            <div class="iconfont icon-xiaozu content-text">&nbsp;组编号&nbsp;组名</div>
           </template>
           <el-row type="flex" justify="space-around">
             <el-col :span="4">
@@ -70,7 +65,7 @@
           </el-row>
         </el-collapse-item>
       </el-collapse>
-      <!-- 根据是否已经组队决定是否显示 -->
+      <!-- 根据是否已经组队以及是否截止组队决定是否显示 -->
       <el-row type="flex" justify="center" v-if="role!=='teacher'">
         <el-col :span="12">
           <el-button

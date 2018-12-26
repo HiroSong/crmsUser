@@ -330,7 +330,7 @@
               <el-col :span="5" v-else>展示材料</el-col>
             </el-row>
           </div>
-          <div style="height: 20vh">
+          <div style="height: 25vh">
             <el-scrollbar class="full-height">
               <el-table :data="teamList" :show-header="false" row-class-name="content-text">
                 <el-table-column prop="order" min-width="20.83%" align="center"></el-table-column>

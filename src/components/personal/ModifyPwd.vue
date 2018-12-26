@@ -6,13 +6,22 @@
     <el-main class="main-gap">
       <cube-input
         v-model="password"
-        placeholder="请输入新密码"
+        placeholder="请输入原密码"
         type="password"
         :autofocus="true"
         :autocomplete="true"
         :clearable="true"
         :eye="{open:false, reverse:false}"
         class="normal-gap"
+      ></cube-input>
+      <cube-input
+        v-model="password"
+        placeholder="请输入新密码"
+        type="password"
+        :autocomplete="true"
+        :clearable="true"
+        :eye="{open:false, reverse:false}"
+        class="small-gap"
       ></cube-input>
       <el-row type="flex" justify="end" class="small-gap">
         <div class="tip-text text-end">* 可包含数字、字母、下划线
@@ -26,7 +35,7 @@
         :autocomplete="true"
         :clearable="true"
         :eye="{open:false, reverse:false}"
-        class="normal-gap"
+        class="small-gap"
       ></cube-input>
       <el-row type="flex" justify="center" class="top">
         <el-col :span="12">
@@ -44,6 +53,7 @@ export default {
   name: 'ModifyPwdPage',
   data() {
     return {
+      oldPassword: undefined,
       password: undefined,
       passwordConfirm: undefined
     }
