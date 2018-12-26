@@ -4,42 +4,75 @@
       <common-sub-header :role="role" :is-mobile="true">课程管理</common-sub-header>
     </el-header>
     <el-main class="main-gap">
-      <el-collapse>
-        <el-collapse-item v-if="role==='teacher'" title="OOAD（主）" name="1">
+      <el-collapse accordion v-if="role==='teacher' && tableData.length!==0">
+        <el-collapse-item v-for="(item,index) in tableData" :key="index" :title="item.courseName">
           <el-row type="flex" justify="center">
-            <router-link to="/course/score" class="no-decoration tip-text">学生成绩</router-link>
+            <router-link
+              :to="{path: '/course/score', query: {courseID: item.id, courseName: item.courseName}}"
+              class="no-decoration tip-text"
+            >学生成绩</router-link>
           </el-row>
           <el-row type="flex" justify="center">
-            <router-link to="/team" class="no-decoration tip-text">学生组队</router-link>
+            <router-link
+              :to="{path: '/team', query: {courseID: item.id}}"
+              class="no-decoration tip-text"
+            >学生组队</router-link>
           </el-row>
           <el-row type="flex" justify="center">
-            <router-link to="/course/info" class="no-decoration tip-text">课程信息</router-link>
+            <router-link
+              :to="{path: '/course/info', query: {courseID: item.id}}"
+              class="no-decoration tip-text"
+            >课程信息</router-link>
           </el-row>
           <el-row type="flex" justify="center">
-            <router-link to="/course/class" class="no-decoration tip-text">班级信息</router-link>
+            <router-link
+              :to="{path: '/course/class', query: {courseID: item.id}}"
+              class="no-decoration tip-text"
+            >班级信息</router-link>
           </el-row>
           <el-row type="flex" justify="center">
-            <router-link to="/seminar/course" class="no-decoration tip-text">讨论课设置</router-link>
+            <router-link
+              :to="{path: '/seminar', query: {courseID: item.id}}"
+              class="no-decoration tip-text"
+            >讨论课设置</router-link>
           </el-row>
           <el-row type="flex" justify="center">
-            <router-link to="/application" class="no-decoration tip-text">共享设置</router-link>
+            <router-link
+              :to="{path: '/application', query: {courseID: item.id}}"
+              class="no-decoration tip-text"
+            >共享设置</router-link>
           </el-row>
         </el-collapse-item>
-        <el-collapse-item v-else title="OOAD 2016-(1)" name="1">
+      </el-collapse>
+      <el-collapse accordion v-else-if="tableData.length!==0">
+        <el-collapse-item
+          v-for="(item,index) in tableData"
+          :key="index"
+          :title="item.courseName+' '+item.klassGrade+'('+item.klassSerial+')'"
+        >
           <el-row type="flex" justify="center">
-            <router-link to="/course/info" class="no-decoration tip-text">课程信息</router-link>
+            <router-link
+              :to="{path: '/course/info', query: {courseID: item.id}}"
+              class="no-decoration tip-text"
+            >课程信息</router-link>
           </el-row>
           <el-row type="flex" justify="center">
-            <router-link to="/course/score" class="no-decoration tip-text">我的成绩</router-link>
+            <router-link
+              :to="{path: '/course/score', query: {courseID: item.id, courseName: item.courseName}}"
+              class="no-decoration tip-text"
+            >我的成绩</router-link>
           </el-row>
           <el-row type="flex" justify="center">
-            <router-link to="/team" class="no-decoration tip-text">我的组队</router-link>
+            <router-link
+              :to="{path: '/team', query: {courseID: item.id,classID: item.klassID}}"
+              class="no-decoration tip-text"
+            >我的组队</router-link>
           </el-row>
         </el-collapse-item>
       </el-collapse>
       <el-row type="flex" justify="center" class="big-gap" v-if="role==='teacher'">
         <router-link to="/course/create" class="no-decoration">
-          <el-button>新建课程</el-button>
+          <el-button plain class="orange-text">新建课程</el-button>
         </router-link>
       </el-row>
     </el-main>
@@ -88,9 +121,7 @@ export default {
   },
   data() {
     return {
-      tableData: [{
-        name: 'OOAD'
-      }]
+      tableData: []
     }
   },
   computed: {
@@ -105,6 +136,19 @@ export default {
     enter() {
       this.$router.push('/seminar')
     }
+  },
+  created() {
+    this.$http.get('/course').then(response => {
+      response.forEach(element => {
+        this.tableData.push(element)
+      });
+    }).catch(error => {
+      this.$createToast({
+        time: 500,
+        txt: error.message,
+        type: "error"
+      }).show()
+    })
   }
 }
 </script>

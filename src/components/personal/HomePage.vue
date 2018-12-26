@@ -9,7 +9,7 @@
           <div class="personal-info sub-title-text">欢迎，{{name}}</div>
         </el-row>
         <el-row>
-          <div class="personal-info content-text">{{number}}</div>
+          <div class="personal-info content-text small-gap">{{username}}</div>
         </el-row>
         <div class="item-menu">
           <el-row class="normal-gap">
@@ -39,7 +39,7 @@ export default {
   data() {
     return {
       name: undefined,
-      number: undefined
+      username: undefined
     }
   },
   computed: {
@@ -48,18 +48,16 @@ export default {
     }
   },
   created() {
-    this.$http.get('/teachers/' +
-      this.$store.state.id).then(response => {
-        this.name = response.teacherName
-        this.number = response.teacherNumber
-      })
-  },
-  activated() {
-    this.$http.get('/teachers/' +
-      this.$store.state.id).then(response => {
-        this.name = response.teacherName
-        this.number = response.teacherNumber
-      })
+    this.$http.get('/user/information').then(response => {
+      this.name = response.name
+      this.username = response.username
+    }).catch(error => {
+      this.$createToast({
+        time: 500,
+        txt: error.message,
+        type: "error"
+      }).show()
+    })
   }
 }
 </script>

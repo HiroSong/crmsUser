@@ -139,3 +139,29 @@ body {
 .el-scrollbar__wrap {
   overflow-x: hidden;
 }
+
+.more-text {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 界面过渡 */
+
+.fade-enter {
+  opacity: 0;
+}
+
+.fade-leave {
+  opacity: 1;
+}
+
+.fade-enter-active {
+  transition: opacity .5s;
+}
+
+.fade-leave-active {
+  opacity: 0;
+  transition: opacity .5s;
+}

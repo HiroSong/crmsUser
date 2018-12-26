@@ -1,53 +1,70 @@
 <template>
   <el-container>
     <el-header class="header">
-      <common-sub-header role="student" :is-mobile="true">课程名 年级 班级序号</common-sub-header>
+      <common-sub-header role="student" :is-mobile="true">{{courseName+' '+className}}</common-sub-header>
     </el-header>
     <el-main class="main-gap">
       <el-row type="flex" justify="end">
         <el-col :span="16">
-          <div class="content-text bold-text text-center">小组编号 小组名</div>
+          <div
+            class="content-text bold-text text-center"
+          >{{myTeam.klassSerial+'-'+myTeam.teamSerial+' '+myTeam.name}}</div>
         </el-col>
         <el-col :span="4">
-          <!-- 若状态为invalid才显示 -->
           <div v-if="isInvalid" class="red-text text-center" style="font-size: 0.75rem;">invalid</div>
         </el-col>
       </el-row>
-      <!-- 若为本人，则将名字标色 -->
       <el-row type="flex" justify="space-around" class="small-gap">
         <el-col :span="4">
           <div class="tip-text bold-text">组长：</div>
         </el-col>
         <el-col :span="12">
-          <div class="tip-text">学号</div>
+          <div
+            v-if="isLeader"
+            class="green-text"
+            style="font-size: 0.75rem;"
+          >{{myTeam.leader.account}}</div>
+          <div v-else class="tip-text">{{myTeam.leader.account}}</div>
         </el-col>
         <el-col :span="8">
-          <div class="tip-text">姓名</div>
+          <div v-if="isLeader" class="green-text" style="font-size: 0.75rem;">{{myTeam.leader.name}}</div>
+          <div v-else class="tip-text">{{myTeam.leader.name}}</div>
         </el-col>
       </el-row>
-      <!-- 判断是否有组员 -->
-      <div>
+      <div v-for="(member,ind) in myTeam.members" :key="ind">
         <el-row type="flex" justify="space-around" class="small-gap">
           <el-col :span="4">
-            <!-- 判断是否为第一个组员 -->
-            <div class="tip-text bold-text">组员：</div>
+            <div v-if="ind===0" class="tip-text bold-text">组员：</div>
           </el-col>
           <el-col :span="12">
-            <div class="tip-text">学号</div>
+            <div
+              v-if="member.id == $store.state.id"
+              class="green-text"
+              style="font-size: 0.75rem;"
+            >{{member.account}}</div>
+            <div v-else class="tip-text">{{member.account}}</div>
           </el-col>
           <el-col :span="8">
             <div v-if="isLeader">
-              <div class="tip-text">姓名
+              <div class="tip-text">
+                {{member.name}}
                 <div
                   type="text"
                   plain
                   class="el-icon-error red-text"
                   style="max-height: 0.75rem;max-width: 0.75rem;"
-                  @click="deleteMember"
+                  @click="deleteMember(member.id)"
                 ></div>
               </div>
             </div>
-            <div v-else class="tip-text">姓名</div>
+            <div v-else>
+              <div
+                v-if="member.id == $store.state.id"
+                class="green-text"
+                style="font-size: 0.75rem;"
+              >{{member.name}}</div>
+              <div v-else class="tip-text">{{member.name}}</div>
+            </div>
           </el-col>
         </el-row>
       </div>
@@ -55,19 +72,21 @@
         <el-row>
           <div class="tip-text bold-text small-gap">添加成员</div>
         </el-row>
-        <cube-checkbox-group
-          v-model="newMemberList"
-          :options="ungroupedList"
-          class="tip-text small-gap"
-        ></cube-checkbox-group>
-        <el-row type="flex" justify="end" v-if="isInvalid">
-          <el-button
-            plain
-            class="orange-text normal-gap"
-            size="mini"
-            @click.native.prevent="sendApplication"
-          >发送申请</el-button>
-        </el-row>
+        <div style="height: 35vh" class="small-gap">
+          <el-scrollbar class="full-height">
+            <cube-checkbox-group
+              v-model="newMemberList"
+              :options="sortedNoTeamList"
+              class="tip-text"
+            >
+              <cube-checkbox
+                v-for="(item,index) in sortedNoTeamList"
+                :key="index"
+                :option="{value: item.id, label: item.account+' '+item.name}"
+              ></cube-checkbox>
+            </cube-checkbox-group>
+          </el-scrollbar>
+        </div>
         <el-row type="flex" justify="space-between">
           <el-button
             type="danger"
@@ -77,30 +96,31 @@
             @click.native.prevent="dismissTeam"
           >解散</el-button>
           <el-button
+            v-if="isInvalid"
+            plain
+            class="orange-text normal-gap"
+            size="mini"
+            @click.native.prevent="sendApplication"
+          >发送申请</el-button>
+          <el-button
             plain
             class="orange-text normal-gap"
             size="mini"
             @click.native.prevent="addMember"
           >添加</el-button>
-          <el-button
-            plain
-            class="orange-text normal-gap"
-            size="mini"
-            @click.native.prevent="saveTeam"
-          >保存</el-button>
         </el-row>
       </div>
-      <div v-else-if="isExpired===false">
-        <el-row type="flex" justify="end">
-          <el-button
-            type="danger"
-            plain
-            class="normal-gap"
-            size="mini"
-            @click.native.prevent="leaveTeam"
-          >退出</el-button>
-        </el-row>
-      </div>
+      <!-- <div v-else-if="!isExpired"> -->
+      <el-row type="flex" justify="end">
+        <el-button
+          type="danger"
+          plain
+          class="normal-gap"
+          size="mini"
+          @click.native.prevent="leaveTeam"
+        >退出</el-button>
+      </el-row>
+      <!-- </div> -->
     </el-main>
   </el-container>
 </template>
@@ -115,32 +135,37 @@ export default {
   },
   data() {
     return {
-      isLeader: true,
-      isInvalid: true,
-      isExpired: true,
-      ungroupedList: [{
-        label: '学号-姓名',
-        value: 'id1'
-      }, {
-        label: '学号-姓名',
-        value: 'id2'
-      }],
-      newMemberList: []
+      isExpired: undefined,
+      noTeamList: [],
+      newMemberList: [],
+      myTeam: undefined,
+      courseName: undefined,
+      className: undefined
     }
   },
   computed: {
+    id() {
+      return this.$store.state.id
+    },
+    sortedNoTeamList() {
+      return this.noTeamList.sort((a, b) => {
+        return parseInt(a.account) - parseInt(b.account)
+      })
+    },
+    courseID() {
+      return this.$route.query.courseID
+    },
+    classID() {
+      return this.$route.query.classID
+    },
+    isInvalid() {
+      return this.myTeam.valid === 0
+    },
+    isLeader() {
+      return this.$store.state.id == this.myTeam.leader.id
+    }
   },
   methods: {
-    createTeam() {
-      this.$createToast({
-        time: 500,
-        txt: '创建成功',
-        type: 'correct',
-        onTimeout: () => {
-          this.$router.back()
-        }
-      }).show()
-    },
     dismissTeam() {
       this.$createDialog({
         type: 'confirm',
@@ -157,17 +182,88 @@ export default {
           disabled: false
         },
         onConfirm: () => {
-          // ajax取消共享
+          this.$http.delete('/team/' + this.myTeam.id).then(() =>
+            this.$createToast({
+              time: 500,
+              txt: '解散成功',
+              type: 'correct',
+              onTimeout: () => {
+                this.$router.back()
+              }
+            }).show()
+          ).catch(error => {
+            this.$createToast({
+              time: 500,
+              txt: error.message,
+              type: "error"
+            }).show()
+          })
         }
       }).show()
     },
     addMember() {
-      // 将newMemberList添加到成员列表中
+      let success = true
+      this.newMemberList.forEach(item => {
+        this.$http.put('/team/' + this.myTeam.id + '/member/new', { id: item }).then().catch(error => {
+          success = false
+          this.$createToast({
+            time: 500,
+            txt: error.message,
+            type: "error"
+          }).show()
+        })
+      })
+      if (success) {
+        this.$createToast({
+          time: 500,
+          txt: '成员添加成功！',
+          type: 'correct',
+          onTimeout: () => {
+            this.newMemberList = []
+            this.updateList()
+          }
+        }).show()
+      }
     },
-    deleteMember() {
+    leaveTeam() {
       this.$createDialog({
         type: 'confirm',
-        title: '提示',
+        title: '警告',
+        content: '确定退出当前队伍吗？',
+        confirmBtn: {
+          text: '确定',
+          active: true,
+          disabled: false
+        },
+        cancelBtn: {
+          text: '放弃',
+          active: false,
+          disabled: false
+        },
+        onConfirm: () => {
+          this.$http.put('/team/' + this.myTeam.id + '/member/old', { id: this.id }).then(() => {
+            this.$createToast({
+              time: 500,
+              txt: '退出成功',
+              type: 'correct',
+              onTimeout: () => {
+                this.$router.back()
+              }
+            }).show()
+          }).catch(error => {
+            this.$createToast({
+              time: 500,
+              txt: error.message,
+              type: "error"
+            }).show()
+          })
+        }
+      }).show()
+    },
+    deleteMember(memberID) {
+      this.$createDialog({
+        type: 'confirm',
+        title: '警告',
         content: '确定删除该成员吗？',
         confirmBtn: {
           text: '确定',
@@ -180,21 +276,23 @@ export default {
           disabled: false
         },
         onConfirm: () => {
-          // 将某个成员从列表中移除
-          this.$createToast({
-            time: 500,
-            txt: '删除成功',
-            type: 'correct'
-          }).show()
+          this.$http.put('/team/' + this.myTeam.id + '/member/old', { id: memberID }).then(() => {
+            this.$createToast({
+              time: 500,
+              txt: '删除成功',
+              type: 'correct',
+              onTimeout: () => {
+                this.updateList()
+              }
+            }).show()
+          }).catch(error => {
+            this.$createToast({
+              time: 500,
+              txt: error.message,
+              type: "error"
+            }).show()
+          })
         }
-      }).show()
-    },
-    saveTeam() {
-      // 将成员列表发送到服务器更新
-      this.$createToast({
-        time: 500,
-        txt: '保存成功',
-        type: 'correct'
       }).show()
     },
     sendApplication() {
@@ -205,14 +303,63 @@ export default {
           placeholder: '请输入理由'
         },
         onConfirm: (e, promptValue) => {
-          this.$createToast({
-            type: 'correct',
-            time: 500,
-            txt: '发送成功'
-          }).show()
+          this.$http.get('/course/' + this.courseID).then(response => {
+            let teacherID = response.teacherID
+            this.$http.post('/team/' + this.myTeam.id + '/teamvalidrequest', { teacher: { id: teacherID }, reason: promptValue }).then(() => {
+              this.$createToast({
+                type: 'correct',
+                time: 500,
+                txt: '发送成功'
+              }).show()
+            })
+          })
         }
       }).show()
+    },
+    updateList() {
+      this.$http.get('/course/' + this.courseID + '/myTeam').then(response =>
+        this.myTeam = response
+      ).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
+      })
+      this.$http.get('/course/' + this.courseID + '/noTeam').then(response => {
+        this.noTeamList = []
+        response.forEach(element => {
+          this.noTeamList.push(element)
+        })
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
+      })
     }
+  },
+  created() {
+    this.updateList()
+    this.$http.get('/course/' + this.courseID).then(response => {
+      this.courseName = response.name
+      this.isExpired = (new Date()).getTime() > this.$datetimeFormat.toDate(response.endTeamTime).getTime()
+    }).catch(error => {
+      this.$createToast({
+        time: 500,
+        txt: error.message,
+        type: "error"
+      }).show()
+    })
+    this.$http.get('/class/' + this.classID).then(response => this.className = response.grade + ' (' + response.klassSerial + ')'
+    ).catch(error => {
+      this.$createToast({
+        time: 500,
+        txt: error.message,
+        type: "error"
+      }).show()
+    })
   }
 }
 </script>

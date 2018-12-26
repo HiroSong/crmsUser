@@ -13,7 +13,7 @@ import store from './vuex/store'
 import axios from './util/request'
 import App from './App'
 
-import datetimeFormat from './util/datetime';
+import datetimeFormat from './util/datetime'
 
 Vue.config.productionTip = false
 Vue.use(ElementUI)

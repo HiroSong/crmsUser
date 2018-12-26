@@ -4,7 +4,7 @@ const datetimeFormat = {
   },
   toDate: (data) => {
     let year = parseInt(data.substring(0, 4))
-    let month = parseInt(data.substring(5, 7))
+    let month = parseInt(data.substring(5, 7)) - 1
     let date = parseInt(data.substring(8, 10))
     let hour = parseInt(data.substring(11, 13))
     let minute = parseInt(data.substring(14, 16))
@@ -12,7 +12,7 @@ const datetimeFormat = {
     return new Date(year, month, date, hour, minute, second)
   },
   toPretty: (data) => {
-    return data.replace(/T/g, ' ')
+    return data.replace(/T/g, ' ').substring(0, 19)
   },
   getToday: () => {
     let date = (new Date()).toISOString()
@@ -20,6 +20,9 @@ const datetimeFormat = {
     let month = parseInt(date.substring(5, 7))
     let day = parseInt(date.substring(8, 10))
     return (new Date(year, month, day, 23, 59, 59)).toISOString().substring(0, 19)
+  },
+  toDateTime: (data) => {
+    return data.toISOString().substring(0, 19)
   }
 }
 

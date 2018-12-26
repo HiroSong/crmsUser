@@ -4,35 +4,50 @@
       <common-sub-header role="teacher" :is-mobile="true">班级信息</common-sub-header>
     </el-header>
     <el-main class="main-gap">
-      <!--此处应该改成table形式显示-->
-      <el-row>
-        <div class="text-center content-text">2016-1</div>
-      </el-row>
-      <el-row class="small-gap" type="flex" justify="center">
-        <el-col class="text-start content-text">讨论课时间</el-col>
-        <el-col class="text-start content-text">周三7、8节</el-col>
-      </el-row>
-      <el-row class="small-gap" type="flex" justify="center">
-        <el-col class="text-start content-text">讨论课地点</el-col>
-        <el-col class="text-start content-text">海韵教学楼</el-col>
-      </el-row>
-      <el-row class="small-gap" type="flex" justify="center">
-        <el-col class="text-start content-text">课程学生名单</el-col>
-        <el-col class="text-start content-text">周三56节.xlsx</el-col>
-      </el-row>
-      <el-row class="small-gap" type="flex" justify="center">
-        <el-col :span="8">
-          <el-upload action="上传地址" :limit="1" :multiple="false" :show-file-list="false">
-            <el-button size="small" class="orange-text full-width">选择文件</el-button>
-          </el-upload>
-        </el-col>
-        <el-col :span="8" :offset="2">
-          <el-button size="small" type="danger" plain class="full-width">删除班级</el-button>
-        </el-col>
-      </el-row>
+      <div v-for="(item,index) in classList" :key="index">
+        <el-row>
+          <div class="text-center content-text">{{item.name}}</div>
+        </el-row>
+        <el-row class="small-gap" type="flex" justify="center">
+          <el-col class="text-start content-text">讨论课时间</el-col>
+          <el-col class="text-start content-text">{{item.time}}</el-col>
+        </el-row>
+        <el-row class="small-gap" type="flex" justify="center">
+          <el-col class="text-start content-text">讨论课地点</el-col>
+          <el-col class="text-start content-text">{{item.classroom}}</el-col>
+        </el-row>
+        <el-row class="small-gap" type="flex" justify="center">
+          <el-col :span="8">
+            <el-upload
+              :http-request="uploadStudent"
+              :action="'/class/' + item.id + '/student'"
+              :limit="1"
+              :multiple="false"
+              :show-file-list="false"
+              :file-list="fileList"
+              :on-success="submitSuccess"
+            >
+              <el-button size="small" class="orange-text full-width">选择文件</el-button>
+            </el-upload>
+          </el-col>
+          <el-col :span="8" :offset="2">
+            <el-button
+              size="small"
+              type="danger"
+              plain
+              class="full-width"
+              @click.native.prevent="deleteClass(item.id)"
+            >删除班级</el-button>
+          </el-col>
+        </el-row>
+        <div class="small-gap"></div>
+      </div>
       <el-row class="normal-gap" type="flex" justify="center">
         <el-col :span="12">
-          <router-link to="/course/class/create" class="no-decoration">
+          <router-link
+            :to="{path: '/course/class/create', query:{courseID: this.courseID}}"
+            class="no-decoration"
+          >
             <el-button class="orange-text full-width">新增班级</el-button>
           </router-link>
         </el-col>
@@ -57,40 +72,21 @@
             <el-scrollbar class="full-height">
               <el-row type="flex" justify="center">
                 <el-col :span="22">
-                  <el-table :data="tableData" row-class-name="content-text" :show-header="false">
+                  <el-table :data="classList" row-class-name="content-text" :show-header="false">
                     <el-table-column prop="name" align="center"></el-table-column>
                     <el-table-column align="center">
                       <template slot-scope="scope">
                         <el-upload
-                          ref="uploadStudent"
-                          action="上传地址"
-                          v-if="scope.row.file===undefined"
+                          :http-request="uploadStudent"
+                          :action="'/class/' + scope.row.id + '/student'"
                           :limit="1"
                           :multiple="false"
-                          :auto-upload="false"
+                          :show-file-list="false"
+                          :file-list="fileList"
+                          :on-success="submitSuccess"
                         >
-                          <el-button type="primary" slot="trigger" size="small">选择文件</el-button>
+                          <el-button type="primary" slot="trigger" size="small">上传</el-button>
                         </el-upload>
-                        <el-button
-                          v-else
-                          type="text"
-                          size="small"
-                          style="color:#606266"
-                          @click.native.prevent="getFile"
-                        >{{scope.row.file.name}}</el-button>
-                      </template>
-                    </el-table-column>
-                    <el-table-column fixed="right" align="center">
-                      <template slot-scope="scope">
-                        <el-row type="flex" justify="center">
-                          <el-button
-                            plain
-                            type="primary"
-                            size="small"
-                            @click.native.prevent="submitFile"
-                          >提交</el-button>
-                          <el-button plain size="small" @click.native.prevent="resetFile">重置</el-button>
-                        </el-row>
                       </template>
                     </el-table-column>
                   </el-table>
@@ -114,6 +110,7 @@
 import CommonSubHeader from '@/components/common/CommonSubHeader'
 import CommonAside from '@/components/common/CommonAside'
 import TitleCard from '@/components/common/TitleCard'
+import { error } from 'util';
 
 export default {
   name: 'ClassPage',
@@ -124,22 +121,17 @@ export default {
   },
   data() {
     return {
-      tableData: [{
-        name: '1班',
-        file: {
-          name: '2016_1.xlsx',
-          url: ''
-        }
-      }, {
-        name: '2班',
-        file: undefined
-      }],
+      classList: undefined,
       courseName: undefined,
       message: undefined,
-      messageVisible: false
+      messageVisible: false,
+      fileList: []
     }
   },
   computed: {
+    courseID() {
+      return this.$route.query.courseID
+    },
     modifiedTitle() {
       return this.courseName + '-导入学生名单'
     },
@@ -148,19 +140,101 @@ export default {
     }
   },
   methods: {
-    getFile() {
-
+    uploadStudent(param) {
+      let formData = new FormData();
+      formData.append("file", param.file);
+      this.$http.post(param.action, formData, {
+        'Content-Type': 'multipart/form-data'
+      }).then(res => {
+        if (res.message === '插入成功') {
+          param.onSuccess()
+        } else {
+          param.onError('文件上传失败(' + response.message + ')');
+        }
+      }).catch(error => {
+        if (error.response) {
+          param.onError('文件上传失败(' + error.response.status + ')，' + error.response.data);
+        } else if (error.request) {
+          param.onError('文件上传失败，服务器端无响应');
+        } else {
+          param.onError('文件上传失败，请求封装失败');
+        }
+      })
     },
-    submitFile() {
-      // ajax请求
-      this.$refs.uploadStudent.submit()
-      this.message = '提交成功！'
-      this.messageVisible = true
+    submitSuccess() {
+      if (this.isMobile) {
+        this.$createToast({
+          time: 500,
+          txt: '提交成功',
+          type: 'correct'
+        }).show()
+      } else {
+        this.message = '提交成功！'
+        this.messageVisible = true
+      }
     },
-    resetFile() {
-      // ajax请求
-      this.message = '学生名单已重置！'
-      this.messageVisible = true
+    deleteClass(id) {
+      this.$createDialog({
+        type: 'confirm',
+        title: '警告',
+        content: '确定删除该班级吗？',
+        confirmBtn: {
+          text: '确定',
+          active: true,
+          disabled: false
+        },
+        cancelBtn: {
+          text: '放弃',
+          active: false,
+          disabled: false
+        },
+        onConfirm: () => {
+          this.$http.delete('/class/' + id).then(() => {
+            this.$http.get('/course/' + this.courseID + '/class').then(response => {
+              this.classList = response
+              this.$createToast({
+                time: 500,
+                txt: "删除成功",
+                type: "correct"
+              }).show()
+            }).catch(error => {
+              this.$createToast({
+                time: 500,
+                txt: error.message,
+                type: "error"
+              }).show()
+            })
+          }).catch(error => {
+            this.$createToast({
+              time: 500,
+              txt: error.message,
+              type: "error"
+            }).show()
+          })
+        }
+      }).show()
+    }
+  },
+  created() {
+    this.$http.get('/course/' + this.courseID + '/class').then(response => {
+      this.classList = response
+    }).catch(error => {
+      this.$createToast({
+        time: 500,
+        txt: error.message,
+        type: "error"
+      }).show()
+    })
+    if (!this.isMobile) {
+      this.$http.get('/course/' + this.courseID).then(response => {
+        this.courseName = response.name
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
+      })
     }
   }
 }

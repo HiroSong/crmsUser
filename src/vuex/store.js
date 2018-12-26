@@ -6,7 +6,9 @@ Vue.use(Vuex)
 // 1、state：创建初始化状态
 const state = {
   token: window.sessionStorage.getItem('token'),
+  id: window.sessionStorage.getItem('id'),
   role: window.sessionStorage.getItem('role'),
+  beActive: window.sessionStorage.getItem('beActive'),
   screenWidth: document.documentElement.clientWidth,
   screenHeight: document.documentElement.clientHeight,
   isCollapse: false,
@@ -21,18 +23,27 @@ const mutations = {
     state.token = payload.token
     state.role = payload.role
     state.id = payload.id
+    state.beActive = payload.beActive
     window.sessionStorage.setItem('token', payload.token)
+    window.sessionStorage.setItem('id', payload.id)
     window.sessionStorage.setItem('role', payload.role)
+    window.sessionStorage.setItem('beActive', payload.beActive)
   },
   CLEAR_AUTH(state) {
     state.token = undefined
-    state.role = undefined
     state.id = undefined
-    window.sessionStorage.setItem('token', undefined)
-    window.sessionStorage.setItem('role', undefined)
+    state.role = undefined
+    state.beActive = undefined
+    window.sessionStorage.removeItem('token')
+    window.sessionStorage.removeItem('id')
+    window.sessionStorage.removeItem('role')
+    window.sessionStorage.removeItem('beActive')
   },
   SET_COLLAPSE(state, payload) {
     state.isCollapse = payload.isCollapse
+  },
+  ACTIVE_ACCOUNT(state, payload) {
+    state.beActive = payload.beActive
   }
 }
 

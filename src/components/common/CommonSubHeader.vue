@@ -4,7 +4,7 @@
       <i class="el-icon-arrow-left" v-on:click="goBack"></i>
     </el-col>
     <el-col :span="20">
-      <div class="title-label text-center orange-text">
+      <div class="title-label text-center orange-text more-text">
         <slot></slot>
       </div>
     </el-col>

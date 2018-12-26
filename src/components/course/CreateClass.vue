@@ -1,32 +1,41 @@
 <template>
   <el-container>
     <el-header class="header">
-      <common-sub-header role="teacher" :is-mobile="isMobile">新建班级</common-sub-header>
+      <common-sub-header role="teacher" :is-mobile="true">新建班级</common-sub-header>
     </el-header>
     <el-main class="main-gap">
-      <!-- 记得绑定变量 -->
       <el-row>
         <div class="content-text">班级名</div>
       </el-row>
-      <cube-input v-model="grade" placeholder="年级" class="small-gap content-text"></cube-input>
-      <cube-input v-model="order" placeholder="班级" class="content-text"></cube-input>
+      <cube-validator :model="classInfo.grade" :rules="{ required: true}" v-model="gradeValid">
+        <cube-input
+          v-model="classInfo.grade"
+          placeholder="年级"
+          class="small-gap content-text"
+          :autofocus="true"
+        ></cube-input>
+      </cube-validator>
+      <cube-validator
+        :model="classInfo.klassSerial"
+        :rules="{ required: true}"
+        v-model="klassSerialValid"
+      >
+        <cube-input v-model="classInfo.klassSerial" placeholder="班级" class="content-text small-gap"></cube-input>
+      </cube-validator>
       <cube-form :model="classInfo" :schema="schemaClass" class="content-text"></cube-form>
       <el-row class="small-gap">
         <el-col :span="12">
           <div class="content-text">学生名单</div>
         </el-col>
         <el-col :span="12">
-          <div v-if="file" class="content-text">{{file}}</div>
-          <div v-else class="tip-text">暂无文件</div>
-        </el-col>
-      </el-row>
-      <el-row type="flex" justify="end" class="small-gap">
-        <el-col :span="12">
           <el-upload
-            ref="uploadStudentFile"
-            action="上传地址"
+            ref="uploadExcelForCreate"
+            :http-request="uploadStudent"
+            action
             :limit="1"
             :multiple="false"
+            :file-list="fileList"
+            :on-success="submitSuccess"
             :auto-upload="false"
           >
             <el-button plain class="orange-text" slot="trigger" size="mini">选择文件</el-button>
@@ -50,46 +59,74 @@ export default {
   components: {
     'common-sub-header': CommonSubHeader
   },
-  data: function () {
+  data() {
     return {
+      classInfo: {
+        grade: undefined,
+        klassSerial: undefined,
+        klassTime: undefined,
+        klassLocation: undefined
+      },
+      classID: undefined,
+      fileList: [],
+      gradeValid: undefined,
+      klassSerialValid: undefined,
     }
   },
   computed: {
     isMobile() {
       return this.$store.state.isMobile
     },
+    courseID() {
+      return this.$route.query.courseID
+    },
     schemaClass() {
       return {
         fields: [{
           type: 'textarea',
-          modelKey: 'time',
+          modelKey: 'klassTime',
           label: '上课时间',
           props: {
             placeholder: '请输入',
             autoExpand: true
           },
           rules: {
-            required: true
+            require: true
           }
         }, {
           type: 'textarea',
-          modelKey: 'address',
+          modelKey: 'klassLocation',
           label: '上课地点',
           props: {
             placeholder: '请输入',
             autoExpand: true
           },
           rules: {
-            required: true
+            require: true
           }
         }]
       }
     }
   },
   methods: {
-    createClass() {
-      this.$refs.uploadStudentFile.submit()
-
+    uploadStudent(param) {
+      let formData = new FormData();
+      formData.append("file", param.file);
+      this.$http.post('/class/' + this.classID + '/student', formData, {
+        'Content-Type': 'multipart/form-data'
+      }).then(res => {
+        param.onSuccess()
+      }).catch(error => {
+        if (error.response) {
+          param.onError('文件上传失败(' + error.response.status + ')，' + error.response.data);
+        } else if (error.request) {
+          param.onError('文件上传失败，服务器端无响应');
+        } else {
+          param.onError('文件上传失败，请求封装失败');
+        }
+      })
+    },
+    submitSuccess() {
       this.$createToast({
         time: 500,
         txt: '创建成功',
@@ -98,6 +135,24 @@ export default {
           this.$router.back()
         }
       }).show()
+    },
+    createClass() {
+      if (!this.gradeValid || !this.klassSerialValid)
+        return
+      this.$http.post('/course/' + this.courseID + '/class', this.classInfo).then(response => {
+        this.classID = response.klassID
+        if (this.fileList.length !== 0) {
+          this.$refs.uploadExcelForCreate.submit()
+        } else {
+          this.submitSuccess()
+        }
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
+      })
     }
   }
 }

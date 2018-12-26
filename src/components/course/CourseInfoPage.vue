@@ -44,36 +44,50 @@
           <el-row>
             <div class="tip-text bold-text">组内选修课程人数</div>
           </el-row>
-          <div v-for="(item,index) in courseInfo.numLimitCourse" :key="index">
-            <el-row>
-              <el-col :span="12">
-                <div class="tip-text">{{item.course+"("+item.teacher+")"}}</div>
-              </el-col>
-              <el-col :span="12">
-                <div class="tip-text">{{item.minNum+"~"+item.maxNum}}</div>
-              </el-col>
+          <div v-if="numLimitCourseInfo.length===0">
+            <div class="tip-text">无要求</div>
+          </div>
+          <div v-else>
+            <div v-for="(item,index) in numLimitCourseInfo" :key="index">
+              <el-row>
+                <el-col :span="12">
+                  <div class="tip-text">{{item.courseName+"("+item.teacherName+")"}}</div>
+                </el-col>
+                <el-col :span="12">
+                  <div class="tip-text">{{item.minMember+"~"+item.maxMember}}</div>
+                </el-col>
+              </el-row>
+            </div>
+            <el-row type="flex" justify="end" class="small-gap">
+              <div
+                v-if="courseInfo.numLimitRule==='TeamAndStrategy' && numLimitCourseInfo.length>1"
+                class="tip-text text-end"
+              >* 要求：均满足</div>
+              <div v-else class="tip-text text-end">* 要求：满足其一</div>
             </el-row>
           </div>
-          <el-row type="flex" justify="end" class="small-gap">
-            <div v-if="courseInfo.numLimitRule" class="tip-text text-end">* 要求：均满足</div>
-            <div v-else class="tip-text text-end">* 要求：满足其一</div>
-          </el-row>
           <el-row>
             <div class="small-gap content-text">冲突课程</div>
           </el-row>
-          <div v-for="(item,index) in courseInfo.conflictCourse" :key="index">
-            <el-row>
-              <div class="tip-text bold-text">{{item.course+"("+item.teacher+")"}}</div>
+          <div v-if="conflictCourseInfo.length===0">
+            <div class="tip-text">无要求</div>
+          </div>
+          <div v-else>
+            <div v-for="(items,index) in conflictCourseInfo" :key="index">
+              <el-row v-for="(item,ind) in items" :key="ind">
+                <div class="tip-text bold-text">{{item.courseName+"("+item.teacherName+")"}}</div>
+              </el-row>
+              <hr width="80%" color="#000000" size="1" align="left">
+            </div>
+            <el-row type="flex" justify="end" class="small-gap">
+              <div class="tip-text text-end">* 选修不同冲突课程的学生不可同组
+                <br>注意同课程名不同教师为不同课程
+              </div>
             </el-row>
           </div>
-          <el-row type="flex" justify="end" class="small-gap">
-            <div class="tip-text text-end">* 选修不同冲突课程的学生不可同组
-              <br>注意同课程名不同教师为不同课程
-            </div>
-          </el-row>
         </el-collapse-item>
       </el-collapse>
-      <el-row v-if="isMainCourse" type="flex" justify="center" class="normal-gap">
+      <el-row v-if="role==='teacher'" type="flex" justify="center" class="normal-gap">
         <el-col :span="12">
           <el-button
             type="danger"
@@ -98,32 +112,16 @@ export default {
   },
   data() {
     return {
-      courseInfo: {
-        id: undefined,
-        name: undefined,
-        require: undefined,
-        presentationRate: 1,
-        questionRate: 0,
-        reportRate: 0,
-        minNum: undefined,
-        maxNum: undefined,
-        startTime: undefined,
-        endTime: undefined,
-        numLimitCourse: [],
-        numLimitRule: undefined,
-        conflictCourse: [{
-          course: 'J2EE',
-          teacher: '邱明',
-          id: 1
-        }]
-      },
-      isMainCourse: undefined,
+      courseInfo: {},
       spanArr: undefined
     }
   },
   computed: {
     role() {
       return this.$store.state.role
+    },
+    courseID() {
+      return this.$route.query.courseID
     },
     tableData() {
       let data = [
@@ -149,43 +147,27 @@ export default {
         }
       ]
       return data
+    },
+    numLimitCourseInfo() {
+      return this.courseInfo.numLimitCourse
+    },
+    conflictCourseInfo() {
+      let conflictCourse = []
+      let indexMap = new Map()
+      this.courseInfo.conflictCourse.forEach(element => {
+        let index = indexMap.get(element.id)
+        if (index === undefined) {
+          indexMap.set(element.id, conflictCourse.length)
+          index = conflictCourse.length
+          conflictCourse.push([])
+        }
+        conflictCourse[index].push({
+          courseName: element.courseName,
+          teacherName: element.teacherName
+        })
+      })
+      return conflictCourse
     }
-  },
-  created() {
-    this.spanArr = []
-    let curIndex = 0
-    this.tableData.forEach((value, index, arr) => {
-      if (index === 0) {
-        this.spanArr.push(1)
-      } else {
-        if (arr[index - 1].text === value.text) {
-          this.spanArr[curIndex]++
-          this.spanArr.push(0)
-        }
-        else {
-          this.spanArr.push(1)
-          curIndex = index
-        }
-      }
-    })
-  },
-  activated() {
-    this.spanArr = []
-    let curIndex = 0
-    this.tableData.forEach((index, value, array) => {
-      if (index === 0) {
-        this.spanArr.push(1)
-      } else {
-        if (array[index - 1].text === value.text) {
-          this.spanArr[curIndex]++
-          this.spanArr.push(0)
-        }
-        else {
-          this.spanArr.push(1)
-          curIndex = index
-        }
-      }
-    })
   },
   methods: {
     arraySpan({ row, column, rowIndex, columnIndex }) {
@@ -205,19 +187,74 @@ export default {
     },
     deleteCourse() {
       this.$createDialog({
-        type: 'alert',
-        title: '提示',
-        content: '删除成功',
+        type: 'confirm',
+        title: '警告',
+        content: '确定删除吗?',
         confirmBtn: {
           text: '确定',
           active: true,
           disabled: false,
         },
         onConfirm: () => {
-          this.$router.back()
+          this.$http.delete('/course/' + this.courseID).then(() => {
+            this.$createToast({
+              time: 500,
+              txt: '删除成功',
+              type: "correct",
+              onTimeout: () => {
+                this.$router.back()
+              }
+            }).show()
+          }).catch(error => {
+            this.$createToast({
+              time: 500,
+              txt: error.message,
+              type: "error"
+            }).show()
+          })
         }
       }).show()
     }
+  },
+  created() {
+    this.spanArr = []
+    let curIndex = 0
+    this.tableData.forEach((value, index, arr) => {
+      if (index === 0) {
+        this.spanArr.push(1)
+      } else {
+        if (arr[index - 1].text === value.text) {
+          this.spanArr[curIndex]++
+          this.spanArr.push(0)
+        }
+        else {
+          this.spanArr.push(1)
+          curIndex = index
+        }
+      }
+    })
+    this.$http.get('/course/' + this.courseID).then(response => {
+      this.courseInfo = {
+        name: response.name,
+        require: response.introduction,
+        presentationRate: response.presentationWeight,
+        questionRate: response.questionWeight,
+        reportRate: response.reportWeight,
+        minNum: response.minMember === null ? '无要求' : response.minMember,
+        maxNum: response.maxMember === null ? '无要求' : response.maxMember,
+        startTime: this.$datetimeFormat.toPretty(response.startTeamTime),
+        endTime: this.$datetimeFormat.toPretty(response.endTeamTime),
+        numLimitCourse: response.courseStrategy,
+        numLimitRule: response.andOr,
+        conflictCourse: response.conflictStrategy
+      }
+    }).catch(error => {
+      this.$createToast({
+        time: 500,
+        txt: error.message,
+        type: "error"
+      }).show()
+    })
   }
 }
 </script>

@@ -1,9 +1,14 @@
 <template>
   <div id="app">
     <adjust-screen :is-mobile="isMobile" v-if="needRotate"></adjust-screen>
-    <transition v-else name="fade" mode="out-in">
-      <router-view/>
-    </transition>
+    <div v-else>
+      <transition name="fade" mode="out-in">
+        <keep-alive v-if="$route.meta.keepAlive">
+          <router-view></router-view>
+        </keep-alive>
+        <router-view v-else/>
+      </transition>
+    </div>
   </div>
 </template>
 

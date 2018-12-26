@@ -1,15 +1,28 @@
 <template>
   <el-container>
     <el-header class="header">
-      <common-sub-header role="student" :is-mobile="true">课程名 年级 班级序号</common-sub-header>
+      <common-sub-header role="student" :is-mobile="true">创建小组</common-sub-header>
     </el-header>
     <el-main class="main-gap">
-      <cube-input v-model="name" placeholder="请输入小组名" :clearable="true" class="content-text"></cube-input>
-      <cube-select class="small-gap" v-model="classId" :options="classOptions" placeholder="请选择班级"></cube-select>
+      <cube-validator :model="teamName" :rules="{ required: true}" v-model="teamNameValid">
+        <cube-input v-model="teamName" placeholder="请输入小组名" :clearable="true" class="content-text"></cube-input>
+      </cube-validator>
+      <cube-validator :model="selectedClass" :rules="{ required: true}" v-model="classValid">
+        <cube-select
+          class="small-gap"
+          v-model="selectedClass"
+          :options="classOptions"
+          placeholder="请选择班级"
+        ></cube-select>
+      </cube-validator>
       <el-row>
         <div class="content-text small-gap">添加成员</div>
       </el-row>
-      <cube-checkbox-group v-model="memberList" :options="ungroupedList" class="tip-text small-gap"></cube-checkbox-group>
+      <div style="height: 40vh;" class="small-gap">
+        <el-scrollbar class="full-height">
+          <cube-checkbox-group v-model="memberList" :options="ungroupedList" class="tip-text"></cube-checkbox-group>
+        </el-scrollbar>
+      </div>
       <el-row type="flex" justify="center">
         <el-col :span="12">
           <el-button
@@ -33,34 +46,92 @@ export default {
   },
   data() {
     return {
-      classId: undefined,
-      classOptions: [{
-        value: 1,
-        text: '2016(1)'
-      }],
-      ungroupedList: [{
-        label: '学号-姓名',
-        value: 'id1'
-      }, {
-        label: '学号-姓名',
-        value: 'id2'
-      }],
-      memberList: []
+      teamName: undefined,
+      selectedClass: undefined,
+      classOptions: [],
+      ungroupedList: [],
+      memberList: [],
+      teamNameValid: true,
+      classValid: true
     }
   },
   computed: {
+    id() {
+      return this.$store.state.id
+    },
+    courseID() {
+      return this.$route.query.courseID
+    },
+    members() {
+      let mem = []
+      this.memberList.forEach(item => mem.push({ id: item }))
+    }
   },
   methods: {
     createTeam() {
+      if (!(this.teamNameValid && this.classValid)) {
+        return
+      }
+      this.$http.post('/course/' + this.courseID + '/team', {
+        teamName: this.teamName,
+        course: {
+          id: this.courseID
+        },
+        klass: {
+          id: this.selectedClass
+        },
+        leader: {
+          id: this.id
+        },
+        members: this.members
+      }).then(response =>
+        this.$createToast({
+          time: 500,
+          txt: '创建成功',
+          type: 'correct',
+          onTimeout: () => {
+            this.$router.back()
+          }
+        }).show()
+      ).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
+      })
+
+    }
+  },
+  created() {
+    this.$http.get('/course/' + this.courseID + '/noTeam').then(response =>
+      response.forEach(element => {
+        this.ungroupedList.push({
+          label: element.account + '-' + element.name,
+          value: element.id
+        })
+      })
+    ).catch(error => {
       this.$createToast({
         time: 500,
-        txt: '创建成功',
-        type: 'correct',
-        onTimeout: () => {
-          this.$router.back()
-        }
+        txt: error.message,
+        type: "error"
       }).show()
-    }
+    })
+    this.$http.get('/course/' + this.courseID + '/class').then(response =>
+      response.forEach(element => {
+        this.classOptions.push({
+          text: element.name,
+          value: element.id
+        })
+      })
+    ).catch(error => {
+      this.$createToast({
+        time: 500,
+        txt: error.message,
+        type: "error"
+      }).show()
+    })
   }
 }
 </script>

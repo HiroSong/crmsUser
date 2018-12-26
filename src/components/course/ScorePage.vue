@@ -5,110 +5,122 @@
       <common-sub-header v-else :role="role" :is-mobile="true">{{modifiedTitle}}</common-sub-header>
     </el-header>
     <el-main class="main-gap">
-      <div v-if="role==='teacher'">
-        <el-collapse :accordion="true">
-          <el-collapse-item v-for="(items,index) in totalScore" :key="index">
-            <template slot="title">
-              <div class="sub-title-text">{{'第'+items.round+'轮'}}</div>
-            </template>
-            <el-collapse :accordion="true">
-              <el-collapse-item v-for="(item,ind) in items.teamList" :key="ind">
-                <template slot="title">
-                  <div class="content-text">{{item.teamName+' ('+item.roundScore+')'}}</div>
-                </template>
-                <div v-for="(seminar, seminarInd) in item.score" :key="seminarInd">
-                  <el-row>
-                    <div class="content-text text-center">{{seminar.seminarName}}</div>
-                  </el-row>
-                  <div v-if="needModify">
+      <div v-if="tableData.length!==0">
+        <div v-if="role==='teacher'">
+          <el-collapse :accordion="true">
+            <el-collapse-item
+              v-for="(items,index) in totalScoreInfo"
+              :key="index"
+              @click.native="searchTeam(items)"
+            >
+              <template slot="title">
+                <div class="sub-title-text">{{'第'+items.round+'轮'}}</div>
+              </template>
+              <el-collapse :accordion="true">
+                <el-collapse-item
+                  v-for="(item,ind) in items.teamList"
+                  :key="ind"
+                  @click.native="searchScore(items,item)"
+                >
+                  <template slot="title">
+                    <div class="content-text">{{item.teamName+' ('+item.roundScore+')'}}</div>
+                  </template>
+                  <div v-for="(seminar, seminarInd) in item.score" :key="seminarInd">
                     <el-row>
-                      <el-col :span="8" :offset="3">
-                        <div class="tip-text">展示:</div>
-                      </el-col>
-                      <el-col :span="10">
-                        <cube-rate v-model="seminar.presentationScore" :justify="true"></cube-rate>
-                      </el-col>
+                      <div class="content-text text-center">{{seminar.seminarName}}</div>
                     </el-row>
-                    <el-row>
-                      <el-col :span="8" :offset="3">
-                        <div class="tip-text">提问:</div>
+                    <div v-if="needModify">
+                      <el-row>
+                        <el-col :span="8" :offset="3">
+                          <div class="tip-text">展示:</div>
+                        </el-col>
+                        <el-col :span="10">
+                          <cube-rate v-model="seminar.presentationScore" :justify="true"></cube-rate>
+                        </el-col>
+                      </el-row>
+                      <el-row>
+                        <el-col :span="8" :offset="3">
+                          <div class="tip-text">提问:</div>
+                        </el-col>
+                        <el-col :span="10">
+                          <cube-rate v-model="seminar.questionScore" :justify="true"></cube-rate>
+                        </el-col>
+                      </el-row>
+                      <el-row>
+                        <el-col :span="8" :offset="3">
+                          <div class="tip-text">书面报告:</div>
+                        </el-col>
+                        <el-col :span="10">
+                          <cube-rate v-model="seminar.reportScore" :justify="true"></cube-rate>
+                        </el-col>
+                      </el-row>
+                    </div>
+                    <el-row v-else>
+                      <el-col :span="8">
+                        <div class="tip-text text-center">展示:{{seminar.presentationScore}}</div>
                       </el-col>
-                      <el-col :span="10">
-                        <cube-rate v-model="seminar.questionScore" :justify="true"></cube-rate>
+                      <el-col :span="8">
+                        <div class="tip-text text-center">提问:{{seminar.questionScore}}</div>
                       </el-col>
-                    </el-row>
-                    <el-row>
-                      <el-col :span="8" :offset="3">
-                        <div class="tip-text">书面报告:</div>
-                      </el-col>
-                      <el-col :span="10">
-                        <cube-rate v-model="seminar.reportScore" :justify="true"></cube-rate>
+                      <el-col :span="8">
+                        <div class="tip-text text-center">书面报告:{{seminar.reportScore}}</div>
                       </el-col>
                     </el-row>
                   </div>
-                  <el-row v-else>
+                  <el-row type="flex" justify="center" class="small-gap">
+                    <el-button
+                      v-if="needModify"
+                      plain
+                      class="orange-text"
+                      size="mini"
+                      @click.native.prevent="confirmModify"
+                    >确定</el-button>
+                    <el-button
+                      v-else
+                      plain
+                      class="orange-text"
+                      size="mini"
+                      @click.native.prevent="modifyScore"
+                    >修改成绩</el-button>
+                  </el-row>
+                </el-collapse-item>
+              </el-collapse>
+            </el-collapse-item>
+          </el-collapse>
+        </div>
+        <div v-else>
+          <el-collapse :accordion="true">
+            <el-collapse-item
+              v-for="(items,index) in personalScore"
+              :key="index"
+              @click.native="searchScore(items,items)"
+            >
+              <template slot="title">
+                <div class="sub-title-text">{{'第'+items.round+'轮 '+items.roundScore}}</div>
+              </template>
+              <el-collapse :accordion="true">
+                <div v-for="(item,ind) in items.score" :key="ind">
+                  <el-row>
+                    <div class="content-text text-center">{{item.seminarName}}</div>
+                  </el-row>
+                  <el-row>
                     <el-col :span="8">
-                      <div class="tip-text text-center">展示:{{seminar.presentationScore}}</div>
+                      <div class="tip-text text-center">展示:{{item.presentationScore}}</div>
                     </el-col>
                     <el-col :span="8">
-                      <div class="tip-text text-center">提问:{{seminar.questionScore}}</div>
+                      <div class="tip-text text-center">提问:{{item.questionScore}}</div>
                     </el-col>
                     <el-col :span="8">
-                      <div class="tip-text text-center">书面报告:{{seminar.reportScore}}</div>
+                      <div class="tip-text text-center">书面报告:{{item.reportScore}}</div>
                     </el-col>
                   </el-row>
                 </div>
-                <el-row type="flex" justify="center" class="small-gap">
-                  <el-button
-                    v-if="needModify"
-                    plain
-                    class="orange-text"
-                    size="mini"
-                    @click.native.prevent="confirmModify"
-                  >确定</el-button>
-                  <el-button
-                    v-else
-                    plain
-                    class="orange-text"
-                    size="mini"
-                    @click.native.prevent="modifyScore"
-                  >修改成绩</el-button>
-                </el-row>
-              </el-collapse-item>
-            </el-collapse>
-          </el-collapse-item>
-        </el-collapse>
+              </el-collapse>
+            </el-collapse-item>
+          </el-collapse>
+        </div>
       </div>
-      <div v-else>
-        <el-collapse :accordion="true">
-          <el-collapse-item v-for="(items,index) in personalScore" :key="index">
-            <template slot="title">
-              <div class="sub-title-text">{{'第'+items.round+'轮 '+items.roundScore}}</div>
-            </template>
-            <el-collapse :accordion="true">
-              <div v-for="(item,ind) in items.score" :key="ind">
-                <el-row>
-                  <div class="content-text text-center">{{item.seminarName}}</div>
-                </el-row>
-                <el-row>
-                  <el-col :span="8">
-                    <div class="tip-text text-center">展示:{{item.presentationScore}}</div>
-                  </el-col>
-                  <el-col :span="8">
-                    <div class="tip-text text-center">提问:{{item.questionScore}}</div>
-                  </el-col>
-                  <el-col :span="8">
-                    <div class="tip-text text-center">书面报告:{{item.reportScore}}</div>
-                  </el-col>
-                </el-row>
-              </div>
-            </el-collapse>
-          </el-collapse-item>
-        </el-collapse>
-      </div>
-      <el-row type="flex" justify="center" class="normal-gap">
-        <el-button plain class="orange-text" @click.native.prevent="exportFile">导出excel</el-button>
-      </el-row>
+      <div v-else class="content-text bold-text text-center">暂无数据</div>
     </el-main>
   </el-container>
   <el-container v-else>
@@ -169,7 +181,7 @@
                   <el-table-column prop="presentationScore" align="center"></el-table-column>
                   <el-table-column prop="questionScore" align="center"></el-table-column>
                   <el-table-column prop="reportScore" align="center"></el-table-column>
-                  <el-table-column prop="sumScore" align="center"></el-table-column>
+                  <el-table-column prop="totalScore" align="center"></el-table-column>
                 </el-table>
               </el-scrollbar>
             </div>
@@ -201,15 +213,6 @@
             </div>
           </el-card>
         </div>
-        <el-row type="flex" justify="end" class="small-gap">
-          <el-button type="primary" @click.native.prevent="exportFile">导出excel</el-button>
-        </el-row>
-        <el-dialog title="提示" :visible.sync="messageVisible" width="30vw" class="content-text">
-          <span>导出成功！</span>
-          <span slot="footer" class="dialog-footer">
-            <el-button type="primary" plain @click.native.prevent="messageVisible = false">确定</el-button>
-          </span>
-        </el-dialog>
       </el-main>
     </el-container>
   </el-container>
@@ -230,21 +233,13 @@ export default {
   data() {
     return {
       round: undefined,
-      tableData: [{
-        round: 1,
-        teamName: '1-1',
-        roundScore: '5分',
-        seminarName: '第一次讨论课',
-        presentationScore: 5,
-        questionScore: 5,
-        reportScore: 5,
-        sumScore: 5
-      }],
-      courseName: undefined,
-      className: undefined,
+      roundList: [],
+      tableData: [],
       spanArr: undefined,
       messageVisible: false,
-      needModify: false
+      needModify: false,
+      roundMap: new Map(),
+      teamMap: new Map()
     }
   },
   computed: {
@@ -262,130 +257,108 @@ export default {
     isMobile() {
       return this.$store.state.isMobile
     },
-    scoreTitle() {
-      return this.courseName + ' ' + this.className
+    courseID() {
+      return this.$route.query.courseID
+    },
+    courseName() {
+      return this.$route.query.courseName
     },
     personalScore() {
       let scoreList = []
+      let indexMap = new Map()
       this.tableData.forEach((value, index, array) => {
-        let roundIndex = -1
-        scoreList.forEach((val, ind, arr) => {
-          if (value.round === val.round) {
-            roundIndex = ind
-          }
+        let roundIndex = indexMap.get(value.round)
+        if (roundIndex === undefined) {
+          indexMap.set(value.round, scoreList.length)
+          roundIndex = scoreList.length
+          scoreList.push({
+            roundID: value.roundID,
+            round: value.round,
+            roundScore: value.roundScore,
+            teamID: value.teamID,
+            teamName: value.teamName,
+            score: []
+          })
+        }
+        scoreList[roundIndex].score.push({
+          seminarID: value.seminarID,
+          seminarOrder: value.seminarOrder,
+          seminarName: value.seminarName,
+          presentationScore: value.presentationScore,
+          questionScore: value.questionScore,
+          reportScore: value.reportScore
         })
-        if (roundIndex !== -1) {
-          scoreList[roundIndex].score.push({
+      })
+      scoreList.sort((a, b) => a.round - b.round)
+      scoreList.forEach((val, index, arr) => {
+        scoreList[index].score.sort((a, b) => {
+          if (a.seminarID === undefined)
+            return 1
+          if (b.seminarID === undefined)
+            return -1
+          return a.seminarOrder - b.seminarOrder
+        })
+      })
+      return scoreList
+    },
+    totalScoreInfo() {
+      let scoreList = []
+      let roundIndexMap = new Map()
+      let teamIndexMap = new Map()
+      this.tableData.forEach((value, index, array) => {
+        let roundIndex = roundIndexMap.get(value.round)
+        if (roundIndex === undefined) {
+          roundIndexMap.set(value.round, scoreList.length)
+          roundIndex = scoreList.length
+          scoreList.push({
+            roundID: value.roundID,
+            round: value.round,
+            teamList: []
+          })
+        }
+        if (value.teamID !== undefined) {
+          let teamIndex = teamIndexMap.get(value.teamID)
+          if (teamIndex === undefined) {
+            teamIndexMap.set(value.teamID, scoreList[roundIndex].teamList.length)
+            teamIndex = scoreList[roundIndex].teamList.length
+            scoreList[roundIndex].teamList.push({
+              teamID: value.teamID,
+              teamName: value.teamName,
+              roundScore: value.roundScore,
+              score: []
+            })
+          }
+          scoreList[roundIndex].teamList[teamIndex].score.push({
+            seminarID: value.seminarID,
+            seminarOrder: value.seminarOrder,
             seminarName: value.seminarName,
             presentationScore: value.presentationScore,
             questionScore: value.questionScore,
             reportScore: value.reportScore
           })
-        } else {
-          scoreList.push({
-            round: value.round,
-            roundScore: value.roundScore,
-            score: [{
-              seminarName: value.seminarName,
-              presentationScore: value.presentationScore,
-              questionScore: value.questionScore,
-              reportScore: value.reportScore
-            }]
-          })
         }
       })
-      return scoreList
-    },
-    totalScore() {
-      let scoreList = []
-      this.tableData.forEach((value, index, array) => {
-        let roundIndex = -1
-        scoreList.forEach((val, ind, arr) => {
-          if (value.round === val.round) {
-            roundIndex = ind
-          }
+      scoreList.sort((a, b) => a.round - b.round)
+      scoreList.forEach((val, index, array) => {
+        scoreList[index].teamList.sort((a, b) => {
+          let aArr = a.teamName.split('-')
+          let bArr = b.teamName.split('-')
+          let aTeam = parseInt(aArr[0]) * 100 + parseInt(aArr[1])
+          let bTeam = parseInt(bArr[0]) * 100 + parseInt(bArr[1])
+          return aTeam - bTeam
         })
-        if (roundIndex !== -1) {
-          let teamIndex = -1
-          scoreList[roundIndex].teamList.forEach((val, ind, arr) => {
-            if (value.teamName === val.teamName) {
-              teamIndex = ind
-            }
+        scoreList[index].teamList.forEach((v, i, arr) => {
+          scoreList[index].teamList[i].score.sort((a, b) => {
+            if (a.seminarID === undefined)
+              return 1
+            if (b.seminarID === undefined)
+              return -1
+            return a.seminarOrder - b.seminarOrder
           })
-          if (teamIndex !== -1) {
-            scoreList[roundIndex].teamList[teamIndex].score.push({
-              seminarName: value.seminarName,
-              presentationScore: value.presentationScore,
-              questionScore: value.questionScore,
-              reportScore: value.reportScore
-            })
-          } else {
-            scoreList[roundIndex].teamList.push({
-              teamName: value.teamName,
-              roundScore: value.roundScore,
-              score: [{
-                seminarName: value.seminarName,
-                presentationScore: value.presentationScore,
-                questionScore: value.questionScore,
-                reportScore: value.reportScore
-              }]
-            })
-          }
-        } else {
-          scoreList.push({
-            round: value.round,
-            teamList: [{
-              teamName: value.teamName,
-              roundScore: value.roundScore,
-              score: [{
-                seminarName: value.seminarName,
-                presentationScore: value.presentationScore,
-                questionScore: value.questionScore,
-                reportScore: value.reportScore
-              }]
-            }]
-          })
-        }
+        })
       })
       return scoreList
     }
-  },
-  created() {
-    // 获取tableData
-    this.spanArr = []
-    let curIndex = 0
-    this.tableData.forEach((value, index, arr) => {
-      if (index === 0) {
-        this.spanArr.push(1)
-      } else {
-        if (arr[index - 1].teamName === value.teamName) {
-          this.spanArr[curIndex]++
-          this.spanArr.push(0)
-        }
-        else {
-          this.spanArr.push(1)
-          curIndex = index
-        }
-      }
-    })
-  },
-  activated() {
-    this.spanArr = []
-    let curIndex = 0
-    this.tableData.forEach((index, value, array) => {
-      if (index === 0) {
-        this.spanArr.push(1)
-      } else {
-        if (array[index - 1].teamName === value.teamName) {
-          this.spanArr[curIndex]++
-          this.spanArr.push(0)
-        }
-        else {
-          this.spanArr.push(1)
-          curIndex = index
-        }
-      }
-    })
   },
   methods: {
     arraySpan({ row, column, rowIndex, columnIndex }) {
@@ -414,9 +387,159 @@ export default {
       }).show()
       this.needModify = false
     },
-    exportFile() {
-      //ajax请求
-      this.messageVisible = true
+    searchTeam(item) {
+      let roundIndex = this.roundMap.get(item.roundID)
+      if (roundIndex !== undefined) {
+        return
+      }
+      this.roundMap.set(item.roundID, item.roundID)
+      this.$http.get('/course/' + this.courseID + '/team').then(teams => {
+        teams.forEach(team => {
+          this.$http.get('/round/' + item.roundID + '/team/' + team.id + '/roundscore').then(roundScore => {
+            this.tableData.push({
+              roundID: item.roundID,
+              round: item.round,
+              teamID: team.id,
+              teamName: team.klassSerial + '-' + team.teamSerial,
+              roundScore: roundScore.totalScore,
+              seminarID: undefined,
+              seminarOrder: undefined,
+              seminarName: '本轮次成绩',
+              presentationScore: roundScore.preScore,
+              questionScore: roundScore.questionScore,
+              reportScore: roundScore.reportScore,
+              totalScore: roundScore.totalScore
+            })
+          }).catch(error => {
+            this.$createToast({
+              time: 500,
+              txt: error.message,
+              type: 'error'
+            }).show()
+          })
+        })
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: 'error'
+        }).show()
+      })
+    },
+    searchScore(roundItem, teamItem) {
+      let teamIndex = this.teamMap.get(roundItem.roundID + '-' + teamItem.teamID)
+      if (teamIndex !== undefined) {
+        return
+      }
+      this.teamMap.set(roundItem.roundID + '-' + teamItem.teamID, teamItem.teamID)
+      this.$http.get('/round/' + roundItem.roundID + '/seminar').then(res => {
+        res.forEach(seminar => {
+          this.$http.get('/seminar/' + seminar.id + '/team/' + teamItem.teamID + '/seminarscore').then(score => {
+            this.tableData.push({
+              roundID: roundItem.roundID,
+              round: roundItem.round,
+              teamID: teamItem.teamID,
+              teamName: teamItem.teamName,
+              roundScore: roundItem.totalScore,
+              seminarID: seminar.id,
+              seminarOrder: seminar.order,
+              seminarName: seminar.topic,
+              presentationScore: score.presentationScore,
+              questionScore: score.questionScore,
+              reportScore: score.reportScore,
+              totalScore: score.totalScore
+            })
+          }).catch(error => {
+            this.$createToast({
+              time: 500,
+              txt: error.message,
+              type: 'error'
+            }).show()
+          })
+        })
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: 'error'
+        }).show()
+      })
+    }
+  },
+  created() {
+    if (this.isMobile) {
+      this.$http.get('/course/' + this.courseID + '/round').then(response => {
+        this.roundList = response
+        this.roundList.forEach(item => {
+          if (this.role === 'teacher') {
+            this.tableData.push({
+              roundID: item.id,
+              round: item.order,
+              teamID: undefined,
+              teamName: undefined,
+              roundScore: undefined,
+              seminarID: undefined,
+              seminarOrder: undefined,
+              seminarName: undefined,
+              presentationScore: undefined,
+              questionScore: undefined,
+              reportScore: undefined,
+              totalScore: undefined
+            })
+          }
+          else {
+            this.$http.get('/course/' + this.courseID + '/myTeam').then(team => {
+              this.$http.get('/round/' + item.id + '/team/' + team.id + '/roundscore').then(roundScore => {
+                this.tableData.push({
+                  roundID: item.id,
+                  round: item.order,
+                  teamID: team.id,
+                  teamName: team.klassSerial + '-' + team.teamSerial,
+                  roundScore: roundScore.totalScore,
+                  seminarID: undefined,
+                  seminarOrder: undefined,
+                  seminarName: '本轮次成绩',
+                  presentationScore: roundScore.preScore,
+                  questionScore: roundScore.questionScore,
+                  reportScore: roundScore.reportScore,
+                  totalScore: roundScore.totalScore
+                })
+              }).catch(error => {
+                this.$createToast({
+                  time: 500,
+                  txt: error.message,
+                  type: 'error'
+                }).show()
+              })
+            })
+          }
+        }).catch(error => {
+          this.$createToast({
+            time: 500,
+            txt: error.message,
+            type: 'error'
+          }).show()
+        })
+      })
+    } else {
+      if (this.role === 'teacher') {
+        this.spanArr = []
+        let curIndex = 0
+        this.tableData.forEach((value, index, arr) => {
+          if (index === 0) {
+            this.spanArr.push(1)
+          } else {
+            if (arr[index - 1].teamName === value.teamName) {
+              this.spanArr[curIndex]++
+              this.spanArr.push(0)
+            }
+            else {
+              this.spanArr.push(1)
+              curIndex = index
+            }
+          }
+        })
+      }
     }
   }
 }

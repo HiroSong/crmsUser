@@ -5,42 +5,68 @@
         <common-sub-header role="teacher" :is-mobile="true">新建课程</common-sub-header>
       </el-header>
       <el-main class="main-gap">
-        <cube-input
-          v-model="courseInfo.name"
-          placeholder="课程名称"
-          type="text"
-          :clearable="true"
-          :autofocus="true"
-          class="content-text"
-        ></cube-input>
+        <cube-validator :model="courseInfo.name" :rules="{required: true}" v-model="nameValid">
+          <cube-input
+            v-model="courseInfo.name"
+            placeholder="课程名称"
+            type="text"
+            :clearable="true"
+            :autofocus="true"
+            class="content-text"
+          ></cube-input>
+        </cube-validator>
         <cube-textarea v-model="courseInfo.require" placeholder="课程要求" class="content-text"></cube-textarea>
         <el-row>
           <div class="small-gap content-text">成绩计算规则</div>
         </el-row>
-        <cube-form :model="courseInfo" :schema="schemaScore" class="content-text"></cube-form>
+        <cube-validator
+          :model="courseInfo.presentationRate"
+          :rules="{sumValid: val=>val+ this.courseInfo.questionRate + this.courseInfo.reportRate===100}"
+          :messages="{sumValid: '权重总和必须为100%'}"
+          :immediate="true"
+          v-model="rateValid"
+          ref="rateValidator"
+        >
+          <cube-form :model="courseInfo" :schema="schemaScore" class="content-text"></cube-form>
+        </cube-validator>
         <el-row>
           <div class="normal-gap content-text">组员基本要求</div>
         </el-row>
         <el-row>
           <div class="small-gap tip-text bold-text">小组总人数(包括组长)</div>
         </el-row>
-        <cube-input
-          v-model="courseInfo.maxNum"
-          placeholder="上限"
-          type="number"
-          class="small-gap tip-text"
-        ></cube-input>
-        <cube-input v-model="courseInfo.minNum" placeholder="下限" type="number" class="tip-text"></cube-input>
+        <cube-validator
+          :model="courseInfo.maxNum"
+          :rules="{numRule: val=>val>this.courseInfo.minNum||this.courseInfo.minNum===undefined}"
+          :messages="{numRule: '上限应该高于下限'}"
+          v-model="numValid"
+          ref="numRuleCourseValidator"
+        >
+          <cube-input
+            v-model="courseInfo.maxNum"
+            placeholder="上限"
+            type="number"
+            class="small-gap tip-text"
+            @focus="e=>this.$refs.numRuleCourseValidator.validate()"
+          ></cube-input>
+          <cube-input
+            v-model="courseInfo.minNum"
+            placeholder="下限"
+            type="number"
+            class="tip-text"
+            @focus="e=>this.$refs.numRuleCourseValidator.validate()"
+          ></cube-input>
+        </cube-validator>
         <el-row class="small-gap" type="flex" justify="space-between">
           <div class="tip-text bold-text">组内选修课程人数</div>
           <div class="el-icon-circle-plus-outline orange-text" @click="showNumLimitCourse"></div>
         </el-row>
         <el-table
-          :data="courseInfo.numLimitCourse"
+          :data="numLimitCourse"
           header-row-class-name="tip-text bold-text"
           row-class-name="tip-text"
         >
-          <el-table-column label="课程" prop="course" align="center" min-width="40%">
+          <el-table-column label="课程" align="center" min-width="40%">
             <template slot-scope="scope">
               <div class="tip-text">{{scope.row.course+"("+scope.row.teacher+")"}}</div>
             </template>
@@ -69,90 +95,93 @@
           <el-row type="flex" justify="end" class="small-gap">
             <div class="tip-text text-end">* 均满足指选课人数均需达到要求
               <br>满足其一指任意选课人数满足即可
+              <br>内部新增按钮为一个策略内的课程之间的或关系
             </div>
           </el-row>
         </div>
         <el-row>
-          <div class="normal-gap content-text">组队开始时间</div>
+          <div class="normal-gap content-text">
+            <span class="red-text" style="font-size: 0.875rem;">*</span>组队开始时间
+          </div>
         </el-row>
-        <cube-input
-          v-model="courseInfo.startTime"
-          placeholder="开始时间"
-          type="datetime-local"
-          :readonly="true"
-          :disabled="true"
-          class="small-gap content-text"
-          @click.native="showStartTimePicker"
-        ></cube-input>
+        <cube-validator
+          :model="courseInfo.startTime"
+          :rules="{required: true}"
+          v-model="startTimeValid"
+        >
+          <cube-input
+            v-model="courseInfo.startTime"
+            placeholder="开始时间"
+            type="datetime-local"
+            :readonly="true"
+            :disabled="true"
+            class="small-gap content-text"
+            @click.native="showStartTimePicker"
+          ></cube-input>
+        </cube-validator>
         <el-row>
-          <div class="small-gap content-text">组队截止时间</div>
+          <div class="small-gap content-text">
+            <span class="red-text" style="font-size: 0.875rem;">*</span>组队截止时间
+          </div>
         </el-row>
-        <cube-input
-          v-model="courseInfo.endTime"
-          placeholder="截止时间"
-          type="datetime-local"
-          :readonly="true"
-          :disabled="true"
-          class="small-gap content-text"
-          @click.native="showEndTimePicker"
-        ></cube-input>
+        <cube-validator
+          :model="courseInfo.endTime"
+          :rules="{required: true}"
+          v-model="endTimeValid"
+        >
+          <cube-input
+            v-model="courseInfo.endTime"
+            placeholder="截止时间"
+            type="datetime-local"
+            :readonly="true"
+            :disabled="true"
+            class="small-gap content-text"
+            @click.native="showEndTimePicker"
+          ></cube-input>
+        </cube-validator>
         <el-row class="small-gap" type="flex" justify="space-between">
           <div class="content-text">冲突课程</div>
-          <div class="el-icon-circle-plus-outline orange-text" @click="showConflictCourse"></div>
+          <div class="el-icon-circle-plus-outline orange-text" @click="addConflictCourseGroup"></div>
         </el-row>
-        <el-dialog title="选择课程" :visible.sync="dialogVisible" width="80vw" class="content-text">
-          <el-select
-            v-model="selectedCourse"
-            filterable
-            placeholder="请输入教师/课程名称"
-            class="content-text"
-            size="medium"
-            no-data-text="暂时没有课程可选"
-          >
-            <el-option
-              v-for="item in courseList"
-              :key="item.value"
-              :value="item.value"
-              :label="item.label"
-              class="content-text"
-            ></el-option>
-          </el-select>
-          <div v-if="dialogType">
-            <cube-input
-              v-model="selectedLimit.maxNum"
-              placeholder="上限"
-              type="number"
-              class="tip-text"
-            ></cube-input>
-            <cube-input
-              v-model="selectedLimit.minNum"
-              placeholder="下限"
-              type="number"
-              class="tip-text"
-            ></cube-input>
+        <div v-for="(item,index) in courseInfo.conflictCourse" :key="index">
+          <div v-if="item.length===0">
+            <el-row class="small-gap">
+              <div class="tip-text text-center">该分组暂无课程</div>
+            </el-row>
+            <el-row type="flex" justify="center">
+              <el-button
+                plain
+                class="orange-text"
+                size="mini"
+                @click.native.prevent="showConflictCourse(index)"
+              >添加新课程</el-button>
+            </el-row>
+            <hr width="80%" color="#000000" size="1" align="left">
           </div>
-          <span slot="footer" class="dialog-footer">
-            <el-button
-              v-if="dialogType"
-              plain
-              class="orange-text"
-              @click.native.prevent="setNumLimitCourse"
-            >确定</el-button>
-            <el-button v-else plain class="orange-text" @click.native.prevent="setConflictCourse">确定</el-button>
-          </span>
-        </el-dialog>
-        <el-table :data="courseInfo.conflictCourse" :show-header="false" row-class-name="tip-text">
-          <el-table-column prop="course" align="center"></el-table-column>
-          <el-table-column prop="teacher" align="center"></el-table-column>
-          <el-table-column align="center">
-            <template slot-scope="scope">
-              <div
-                class="el-icon-circle-close-outline orange-text"
-                @click="deleteSelect(scope.$index,courseInfo.conflictCourse)"
-              ></div>
-            </template>
-          </el-table-column>
-        </el-table>
+          <div v-else>
+            <el-table :data="item" :show-header="false" row-class-name="tip-text">
+              <el-table-column prop="course" align="center" min-width="40%"></el-table-column>
+              <el-table-column prop="teacher" align="center" min-width="40%"></el-table-column>
+              <el-table-column align="center" min-width="20%">
+                <template slot-scope="scope">
+                  <div
+                    class="el-icon-circle-close-outline orange-text"
+                    @click="deleteSelect(scope.$index,courseInfo.conflictCourse[index])"
+                  ></div>
+                </template>
+              </el-table-column>
+            </el-table>
+            <el-row type="flex" justify="center">
+              <el-button
+                plain
+                class="orange-text"
+                size="mini"
+                @click="showConflictCourse(index)"
+              >添加新课程</el-button>
+            </el-row>
+            <hr width="80%" color="#000000" size="1" align="left">
+          </div>
+        </div>
         <el-row type="flex" justify="end" class="small-gap">
           <div class="tip-text text-end">* 选修不同冲突课程的学生不可同组
             <br>注意同课程名不同教师为不同课程
@@ -163,6 +192,53 @@
             <el-button plain class="orange-text full-width" @click.native.prevent="createCourse">发布</el-button>
           </el-col>
         </el-row>
+        <el-dialog title="选择课程" :visible.sync="dialogVisible" width="80vw" class="content-text">
+          <el-select
+            v-model="selectedCourse"
+            filterable
+            placeholder="请输入课程名/教师"
+            class="content-text"
+            size="medium"
+            no-data-text="暂时没有课程可选"
+            :clearable="true"
+          >
+            <el-option
+              v-for="item in courseList"
+              :key="item.value"
+              :value="item.value"
+              :label="item.label"
+              class="content-text"
+            ></el-option>
+          </el-select>
+          <div v-if="dialogType">
+            <cube-validator
+              :model="selectedLimit.maxNum"
+              :rules="{numRule: val=>val>this.selectedLimit.minNum||this.selectedLimit.minNum===undefined}"
+              :messages="{numRule: '上限应该高于下限'}"
+              v-model="selectedNumValid"
+              ref="selectedNumRuleCourseValidator"
+            >
+              <cube-input
+                v-model="selectedLimit.maxNum"
+                placeholder="上限"
+                type="number"
+                class="tip-text"
+                @focus="e=>this.$refs.selectedNumRuleCourseValidator.validate()"
+              ></cube-input>
+              <cube-input
+                v-model="selectedLimit.minNum"
+                placeholder="下限"
+                type="number"
+                class="tip-text"
+                @focus="e=>this.$refs.selectedNumRuleCourseValidator.validate()"
+              ></cube-input>
+            </cube-validator>
+          </div>
+          <span slot="footer" class="dialog-footer">
+            <el-button v-if="dialogType" plain class="orange-text" @click="setNumLimitCourse">确定</el-button>
+            <el-button v-else plain class="orange-text" @click="setConflictCourse">确定</el-button>
+          </span>
+        </el-dialog>
       </el-main>
     </el-container>
   </div>
@@ -170,6 +246,7 @@
 
 <script>
 import CommonSubHeader from '@/components/common/CommonSubHeader'
+import { error } from 'util';
 
 export default {
   name: 'CreateCoursePage',
@@ -181,7 +258,7 @@ export default {
       courseInfo: {
         name: undefined,
         require: undefined,
-        presentationRate: 1,
+        presentationRate: 100,
         questionRate: 0,
         reportRate: 0,
         minNum: undefined,
@@ -190,11 +267,7 @@ export default {
         endTime: undefined,
         numLimitCourse: [],
         numLimitRule: undefined,
-        conflictCourse: [{
-          course: 'J2EE',
-          teacher: '邱明',
-          id: 1
-        }]
+        conflictCourse: []
       },
       numLimitRuleOptions: [{
         value: true,
@@ -204,34 +277,34 @@ export default {
         text: "满足其一"
       }],
       options: [{
-        value: 1,
+        value: 100,
         text: '100%'
       }, {
-        value: 0.9,
+        value: 90,
         text: '90%'
       }, {
-        value: 0.8,
+        value: 80,
         text: '80%'
       }, {
-        value: 0.7,
+        value: 70,
         text: '70%'
       }, {
-        value: 0.6,
+        value: 60,
         text: '60%'
       }, {
-        value: 0.5,
+        value: 50,
         text: '50%'
       }, {
-        value: 0.4,
+        value: 40,
         text: '40%'
       }, {
-        value: 0.3,
+        value: 30,
         text: '30%'
       }, {
-        value: 0.2,
+        value: 20,
         text: '20%'
       }, {
-        value: 0.1,
+        value: 10,
         text: '10%'
       }, {
         value: 0,
@@ -245,10 +318,20 @@ export default {
       selectedLimit: {
         minNum: undefined,
         maxNum: undefined
-      }
+      },
+      conflictIndex: undefined,
+      nameValid: true,
+      startTimeValid: true,
+      endTimeValid: true,
+      rateValid: true,
+      numValid: true,
+      selectedNumValid: true
     }
   },
   computed: {
+    numLimitCourse() {
+      return this.courseInfo.numLimitCourse
+    },
     schemaScore() {
       return {
         fields: [{
@@ -260,6 +343,11 @@ export default {
           },
           rules: {
             required: true
+          },
+          events: {
+            change: (val, index, text) => {
+              this.$refs.rateValidator.validate()
+            }
           }
         }, {
           type: 'select',
@@ -270,6 +358,11 @@ export default {
           },
           rules: {
             required: true
+          },
+          events: {
+            change: (val, index, text) => {
+              this.$refs.rateValidator.validate()
+            }
           }
         }, {
           type: 'select',
@@ -280,35 +373,40 @@ export default {
           },
           rules: {
             required: true
-          }
-        }]
-      }
-    },
-    schemaTeamNum() {
-      return {
-        fields: [{
-          type: 'input',
-          modelKey: 'maxNum',
-          props: {
-            placeholder: '上限'
           },
-          rules: {
-            required: true
-          }
-        }, {
-          type: 'input',
-          modelKey: 'minNum',
-          props: {
-            placeholder: '下限'
-          },
-          rules: {
-            required: true
+          events: {
+            change: (val, index, text) => {
+              this.$refs.rateValidator.validate()
+            }
           }
         }]
       }
     },
     numLimitCourseNum() {
       return this.courseInfo.numLimitCourse.length
+    },
+    conflictCourseStrategies() {
+      let strategies = []
+      this.courseInfo.conflictCourse.forEach(element => {
+        element.forEach(item => {
+          strategies.push({
+            id: item.id,
+            courseID: item.courseID
+          })
+        })
+      })
+      return strategies
+    },
+    courseMemberLimitStrategies() {
+      let strategies = []
+      this.courseInfo.numLimitCourse.forEach(element => {
+        strategies.push({
+          courseID: element.courseID,
+          minMember: element.minNum,
+          maxMember: element.maxNum
+        })
+      })
+      return strategies
     }
   },
   methods: {
@@ -360,48 +458,46 @@ export default {
         }).show()
       }
     },
-    getCourseOption() {
-      // 根据dialogType决定筛选方法
-      // 从totalCourse中选择
-      // 记得返回的是未选取过的课程
-      this.courseList = []
-      this.courseList.push({
-        label: '.Net' + '(' + '杨律青' + ')',
-        value: 1
-      })
+    showCourseOption() {
+      this.dialogVisible = true
     },
     showNumLimitCourse() {
       this.dialogType = true
       this.showCourseOption()
     },
-    showConflictCourse() {
+    showConflictCourse(index) {
+      this.conflictIndex = index
       this.dialogType = false
       this.showCourseOption()
     },
-    showCourseOption() {
-      this.getCourseOption()
-      this.dialogVisible = true
-    },
-    getSingleCourse(courseId) {
-      return {
-        course: '.Net',
-        teacher: '杨律青',
-        id: 2
-      }
-    },
     setNumLimitCourse() {
-      let singleCourse = this.getSingleCourse(this.selectedCourse)
-      singleCourse.minNum = this.selectedLimit.minNum
-      singleCourse.maxNum = this.selectedLimit.maxNum
-      this.courseInfo.numLimitCourse.push(singleCourse)
+      this.totalCourseList.forEach(element => {
+        if (element.id === this.selectedCourse) {
+          this.courseInfo.numLimitCourse.push({
+            course: element.courseName,
+            teacher: element.teacher.name,
+            courseID: element.id,
+            minNum: this.selectedLimit.minNum,
+            maxNum: this.selectedLimit.maxNum
+          })
+        }
+      })
       this.dialogVisible = false
       this.selectedCourse = undefined
       this.selectedLimit.minNum = undefined
       this.selectedLimit.maxNum = undefined
     },
     setConflictCourse() {
-      let course = this.getSingleCourse(this.selectedCourse)
-      this.courseInfo.conflictCourse.push(course)
+      this.totalCourseList.forEach(element => {
+        if (element.id === this.selectedCourse) {
+          this.courseInfo.conflictCourse[this.conflictIndex].push({
+            id: this.conflictIndex + 1,
+            course: element.courseName,
+            teacher: element.teacher.name,
+            courseID: element.id
+          })
+        }
+      })
       this.dialogVisible = false
       this.selectedCourse = undefined
     },
@@ -421,21 +517,79 @@ export default {
         }
       }).show()
     },
+    addConflictCourseGroup() {
+      let length = this.courseInfo.conflictCourse === undefined ? 0 : this.courseInfo.conflictCourse.length
+      if (length === 0) {
+        this.courseInfo.conflictCourse.push([])
+        return
+      }
+      if (this.courseInfo.conflictCourse[length - 1].length === 0) {
+        this.$createToast({
+          time: 500,
+          txt: '已有一个冲突组',
+          type: 'warn'
+        }).show()
+      } else {
+        this.courseInfo.conflictCourse.push([])
+      }
+    },
     createCourse() {
-      this.$createDialog({
-        type: 'alert',
-        title: '提示',
-        content: '创建成功',
-        confirmBtn: {
-          text: '确定',
-          active: true,
-          disabled: false,
-        },
-        onConfirm: () => {
-          this.$router.back()
-        }
-      }).show()
+      if (!(this.nameValid && this.startTimeValid && this.endTimeValid)) {
+        return
+      }
+      this.$http.post('/course', {
+        teacher: { id: this.$store.state.id },
+        courseName: this.courseInfo.name,
+        introduction: this.courseInfo.require,
+        presentationPercentage: this.courseInfo.presentationRate,
+        questionPercentage: this.courseInfo.questionRate,
+        reportPercentage: this.courseInfo.reportRate,
+        teamStartTime: this.courseInfo.startTime,
+        teamEndTime: this.courseInfo.endTime,
+        andOr: this.courseInfo.numLimitRule ? "TeamAndStrategy" : "TeamOrStrategy",
+        maxMemberNumber: this.courseInfo.maxNum,
+        minMemberNumber: this.courseInfo.minNum,
+        courseMemberLimitStrategies: this.courseMemberLimitStrategies,
+        conflictCourseStrategies: this.conflictCourseStrategies
+      }).then(() => {
+        this.$createDialog({
+          type: 'alert',
+          title: '提示',
+          content: '创建成功',
+          confirmBtn: {
+            text: '确定',
+            active: true,
+            disabled: false,
+          },
+          onConfirm: () => {
+            this.$router.back()
+          }
+        }).show()
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: 'error'
+        }).show()
+      })
     }
+  },
+  created() {
+    this.$http.get('/allcourse').then(response => {
+      this.totalCourseList = response
+      this.totalCourseList.forEach(item => {
+        this.courseList.push({
+          label: item.courseName + '(' + item.teacher.name + ')',
+          value: item.id
+        })
+      })
+    }).catch(error => {
+      this.$createToast({
+        time: 500,
+        txt: error.message,
+        type: 'error'
+      }).show()
+    })
   }
 }
 </script>
