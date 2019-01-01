@@ -110,8 +110,7 @@
           >添加</el-button>
         </el-row>
       </div>
-      <!-- <div v-else-if="!isExpired"> -->
-      <el-row type="flex" justify="end">
+      <el-row v-else type="flex" justify="end">
         <el-button
           type="danger"
           plain
@@ -120,7 +119,6 @@
           @click.native.prevent="leaveTeam"
         >退出</el-button>
       </el-row>
-      <!-- </div> -->
     </el-main>
   </el-container>
 </template>

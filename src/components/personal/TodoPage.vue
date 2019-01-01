@@ -152,8 +152,8 @@ export default {
           onTimeout: () => {
             this.$http.get('/request/teamshare').then(
               response => {
+                this.teamShare = []
                 response.forEach(res => {
-                  this.teamShare = []
                   if (res.receiveCourseTeacherID == this.id) {
                     this.teamShare.push(res)
                   }

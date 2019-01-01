@@ -9,7 +9,7 @@
       </el-row>
       <el-row class="small-gap">
         <el-select
-          v-model="selectedCourse"
+          v-model="selectedType"
           placeholder="请选择共享类型"
           class="content-text full-width"
           size="small"
@@ -54,6 +54,7 @@
 
 <script>
 import CommonSubHeader from '@/components/common/CommonSubHeader'
+import { create } from 'domain';
 
 export default {
   name: 'CreateApplicationPage',
@@ -62,8 +63,24 @@ export default {
   },
   data() {
     return {
+      selectedType: undefined,
       selectedCourse: undefined,
-      courseList: undefined
+      teamCourseList: [],
+      seminarCourseList: []
+    }
+  },
+  computed: {
+    courseID() {
+      return this.$route.query.courseID
+    },
+    courseList() {
+      if (this.selectedType === '1') {
+        return this.seminarCourseList
+      } else if (this.selectedType === '2') {
+        return this.teamCourseList
+      } else {
+        return []
+      }
     }
   },
   methods: {
@@ -83,18 +100,82 @@ export default {
           disabled: false
         },
         onConfirm: () => {
-          // ajax创建共享
-          this.$createToast({
-            time: 500,
-            txt: '共享请求已发送',
-            type: 'correct',
-            onTimeout: () => {
-              this.$router.back()
-            }
-          }).show()
+          let url = this.selectedType === '1' ? '/request/seminarshare' : '/request/teamshare'
+          this.$http.post(url, { mainCourseID: this.courseID, subCourseID: this.selectedCourse }).then(
+            response => {
+              this.$createToast({
+                time: 500,
+                txt: '共享请求已发送',
+                type: 'correct',
+                onTimeout: () => {
+                  this.$router.back()
+                }
+              }).show()
+            }).catch(error => {
+              this.$createToast({
+                time: 500,
+                txt: error.message,
+                type: "error"
+              }).show()
+            })
         }
       }).show()
     }
+  },
+  created() {
+    this.$http.get('/allcourse').then(
+      response => {
+        this.$http.get('/course/' + this.courseID + '/teamshare').then(
+          res => {
+            let teamCourses = response.filter(item => {
+              if (res.length !== 0) {
+                return res.every(course => item.id !== course.masterCourse.masterCourseID && item.id !== course.receiveCourse.receiveCourseID && item.id !== this.courseID)
+              } else {
+                return item.id !== this.courseID
+              }
+            })
+            teamCourses.forEach(item => {
+              this.teamCourseList.push({
+                value: item.id,
+                label: item.courseName + '(' + item.teacher.name + ')'
+              })
+            })
+          }).catch(error => {
+            this.$createToast({
+              time: 500,
+              txt: error.message,
+              type: "error"
+            }).show()
+          })
+        this.$http.get('/course/' + this.courseID + '/seminarshare').then(
+          res => {
+            let seminarCourses = response.filter(item => {
+              if (res.length !== 0) {
+                return res.every(course => item.id !== course.masterCourse.masterCourseID && item.id !== course.receiveCourse.receiveCourseID && item.id !== this.courseID)
+              } else {
+                return item.id != this.courseID
+              }
+            })
+            seminarCourses.forEach(item => {
+              this.seminarCourseList.push({
+                value: item.id,
+                label: item.courseName + '(' + item.teacher.name + ')'
+              })
+            })
+          }).catch(error => {
+            this.$createToast({
+              time: 500,
+              txt: error.message,
+              type: "error"
+            }).show()
+          })
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
+      })
   }
 }
 </script>
