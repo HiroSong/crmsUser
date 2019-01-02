@@ -113,11 +113,19 @@ export default {
             this.$router.push('/login')
           }
         }).show()).catch(error => {
-          this.$createToast({
-            time: 500,
-            txt: error.message,
-            type: 'error'
-          }).show()
+          if (error.response.status === 500) {
+            this.$createToast({
+              time: 500,
+              txt: '请检查原密码！',
+              type: 'error'
+            }).show()
+          } else {
+            this.$createToast({
+              time: 500,
+              txt: error.message,
+              type: 'error'
+            }).show()
+          }
         })
       }
     }
