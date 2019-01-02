@@ -122,7 +122,7 @@ export default {
       this.$router.push('/login')
     }
   },
-  activated() {
+  created() {
     this.$http.get('/user/information').then(response => {
       if (this.role === 'teacher') {
         this.personalTeacherInfo[0].value = response.name
