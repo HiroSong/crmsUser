@@ -27,30 +27,37 @@ import LoginSubHeader from '@/components/common/LoginSubHeader'
 
 export default {
   name: 'FindPasswordPage',
+  components: {
+    'login-sub-header': LoginSubHeader
+  },
   data() {
     return {
       username: undefined
     }
   },
-  components: {
-    'login-sub-header': LoginSubHeader
-  },
   methods: {
     findPassword() {
-
-      this.$createDialog({
-        type: 'alert',
-        title: '提示',
-        content: '密码已发送至邮箱',
-        confirmBtn: {
-          text: '确定',
-          active: true,
-          disabled: false
-        },
-        onConfirm: () => {
-          this.$router.back()
-        }
-      }).show()
+      this.$http.get('/user/' + this.username + '/password').then(() => {
+        this.$createDialog({
+          type: 'alert',
+          title: '提示',
+          content: '密码已发送至邮箱,请注意查收',
+          confirmBtn: {
+            text: '确定',
+            active: true,
+            disabled: false
+          },
+          onConfirm: () => {
+            this.$router.back()
+          }
+        }).show()
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
+      })
     }
   }
 }
