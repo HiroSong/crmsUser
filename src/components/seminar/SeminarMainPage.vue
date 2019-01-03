@@ -7,13 +7,17 @@
       <el-table :data="courseList" row-class-name="content-text" :show-header="false">
         <el-table-column min-width="100%" align="left">
           <template slot-scope="scope">
-            <div @click="enterSeminar">
+            <div @click="enterSeminar(scope.row.id,scope.row.klassID)">
               <el-row>
                 <el-col :span="2">
                   <div class="iconfont icon-book orange-text"></div>
                 </el-col>
                 <el-col :span="22">
-                  <div class="content-text">{{scope.row.name}}</div>
+                  <div v-if="role==='teacher'" class="content-text">{{scope.row.courseName}}</div>
+                  <div
+                    v-else
+                    class="content-text"
+                  >{{scope.row.courseName+' '+scope.row.klassGrade+'('+scope.row.klassSerial+')'}}</div>
                 </el-col>
               </el-row>
             </div>
@@ -21,7 +25,7 @@
         </el-table-column>
       </el-table>
       <el-row v-if="role==='teacher'" class="big-gap" type="flex" justify="end">
-        <div class="orange-text" style="font-size: 0.875rem;" @click="showSeminarPicker">正在进行的讨论课</div>
+        <div class="orange-text" style="font-size: 0.875rem;" @click="enterProcessSeminar">正在进行的讨论课</div>
       </el-row>
     </el-main>
   </el-container>
@@ -37,9 +41,7 @@ export default {
   },
   data() {
     return {
-      courseList: [{
-        name: 'OOAD'
-      }]
+      courseList: []
     }
   },
   computed: {
@@ -48,46 +50,41 @@ export default {
     }
   },
   methods: {
-    enterSeminar() {
-      this.$router.push('/seminar')
+    enterSeminar(id, klassID) {
+      this.$router.push({ path: '/seminar', query: { courseID: id, classID: klassID } })
     },
-    showSeminarPicker() {
-      this.$createSegmentPicker({
-        data: [{
-          title: '课程',
-          data: [[{
-            text: 'OOAD',
-            value: 1
-          },
-          {
-            text: 'J2EE',
-            value: 2
-          }]],
-          selectedIndex: [0]
-        }, {
-          title: '班级',
-          data: [[{
-            text: '2016(1)',
-            value: 1
-          }]],
-          selectedIndex: [0]
-        }, {
-          title: '讨论课',
-          data: [[{
-            text: '需求分析',
-            value: 1
-          }]],
-          selectedIndex: [0]
-        }],
-        cancelTxt: '取消',
-        confirmTxt: '确定',
-        onNext: (i, selectedDate, selectedValue, selectedText) => {
-        },
-        onSelect: () => {
-          this.$router.push('/seminar/process')
+    enterProcessSeminar() {
+      this.$http.get('/seminar/process').then(response => {
+        if (response.id !== undefined) {
+          this.$router.push({ path: '/seminar/process', query: { seminarID: response.id, classID: response.klassID } })
+        } else {
+          this.$createToast({
+            time: 500,
+            txt: '暂无正在进行的讨论课',
+            type: "error"
+          }).show()
         }
-      }).show()
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
+      })
     }
+  },
+  created() {
+    this.$http.get('/course').then(response => {
+      response.forEach(element => {
+        this.courseList.push(element)
+      })
+    }).catch(error => {
+      this.$createToast({
+        time: 500,
+        txt: error.message,
+        type: "error"
+      }).show()
+    })
   }
 }
 </script>

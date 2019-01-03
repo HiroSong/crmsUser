@@ -1,19 +1,29 @@
 <template>
   <el-container>
     <el-header class="header">
-      <common-sub-header role="teacher" :is-mobile="true">{{'第'+round+'轮'}}</common-sub-header>
+      <common-sub-header role="teacher" :is-mobile="true">{{'第'+roundInfo.order+'轮'}}</common-sub-header>
     </el-header>
     <el-main class="main-gap">
       <div class="content-text">讨论课</div>
       <el-row>
         <el-col :offset="4" :span="20">
-          <div class="content-text small-gap">讨论课名称</div>
+          <div
+            class="content-text small-gap"
+            v-for="(item,index) in seminarList"
+            :key="index"
+          >{{item}}</div>
         </el-col>
       </el-row>
       <div class="content-text normal-gap">成绩设置</div>
-      <cube-form :model="scoreRule" :schema="schemaScore" class="content-text"></cube-form>
+      <cube-form :model="roundInfo" :schema="schemaScore" class="content-text"></cube-form>
       <div class="content-text normal-gap">本轮讨论课报名次数</div>
-      <cube-form :model="attendanceRule" :schema="schemaAttendance" class="content-text"></cube-form>
+      <div v-for="(item,index) in roundInfo.signUpNumber" :key="index">
+        <cube-form
+          :model="roundInfo.signUpNumber[index]"
+          :schema="schemaAttendance(item)"
+          class="content-text"
+        ></cube-form>
+      </div>
       <el-row type="flex" justify="center">
         <el-col :span="12">
           <el-button
@@ -44,26 +54,19 @@ export default {
         value: 1,
         text: '平均分'
       }],
-      scoreRule: {
-        presentationRule: undefined,
-        questionRule: undefined,
-        reportRule: undefined
-      }
+      roundInfo: undefined,
+      seminarList: []
     }
   },
   computed: {
-    attendanceRule() {
-      return [{
-        times: undefined
-      }, {
-        times: undefined
-      }]
+    roundID() {
+      return this.$route.query.roundID
     },
     schemaScore() {
       return {
         fields: [{
           type: 'select',
-          modelKey: 'presentationRule',
+          modelKey: 'calculatePreType',
           label: '课堂展示',
           props: {
             options: this.options
@@ -73,7 +76,7 @@ export default {
           }
         }, {
           type: 'select',
-          modelKey: 'questionRule',
+          modelKey: 'calculateQueType',
           label: '课堂提问',
           props: {
             options: this.options
@@ -83,7 +86,7 @@ export default {
           }
         }, {
           type: 'select',
-          modelKey: 'reportRule',
+          modelKey: 'calculateRepType',
           label: '课堂报告',
           props: {
             options: this.options
@@ -96,42 +99,76 @@ export default {
     },
     ruleOptions() {
       let optionsList = []
-      this.attendanceRule.forEach((value, index, array) => {
+      this.seminarList.forEach((value, index, array) => {
         optionsList.push(index + 1)
       })
       return optionsList
     },
     schemaAttendance() {
-      let selectList = []
-      this.attendanceRule.forEach((value, index, array) => {
-        selectList.push({
-          type: 'select',
-          modelKey: value.times,
-          label: '班级名',
-          props: {
-            options: this.ruleOptions
-          },
-          rules: {
-            required: true
-          }
-        })
-      })
-      return {
-        fields: selectList
+      return item => {
+        return {
+          fields: [{
+            type: 'select',
+            modelKey: 'signUpNumber',
+            label: item.klassGrade + '(' + item.klassSerial + ')',
+            props: {
+              options: this.ruleOptions
+            },
+            rules: {
+              required: true
+            }
+          }]
+        }
       }
     }
   },
   methods: {
     modifySeminar() {
+      this.$http.put('/round/' + this.roundID, {
+        roundSerial: this.roundInfo.order,
+        presentationScoreMethod: this.roundInfo.calculatePreType,
+        questionScoreMethod: this.roundInfo.calculateQueType,
+        reportScoreMethod: this.roundInfo.calculateRepType,
+        signUpNumber: this.roundInfo.signUpNumber
+      }).then(() => {
+        this.$createToast({
+          time: 500,
+          txt: '修改成功',
+          type: 'correct',
+          onTimeout: () => {
+            this.$router.back()
+          }
+        }).show()
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
+      })
+    }
+  },
+  created() {
+    this.$http.get('/round/' + this.roundID).then(response => {
+      this.roundInfo = response
+    }).catch(error => {
       this.$createToast({
         time: 500,
-        txt: '修改成功',
-        type: 'correct',
-        onTimeout: () => {
-          this.$router.back()
-        }
+        txt: error.message,
+        type: "error"
       }).show()
-    }
+    })
+    this.$http.get('/round/' + this.roundID + '/seminar').then(response => {
+      response.forEach(item => {
+        this.seminarList.push(item.topic)
+      })
+    }).catch(error => {
+      this.$createToast({
+        time: 500,
+        txt: error.message,
+        type: "error"
+      }).show()
+    })
   }
 }
 </script>

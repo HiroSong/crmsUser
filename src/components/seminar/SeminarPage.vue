@@ -4,44 +4,48 @@
       <common-sub-header :role="role" :is-mobile="true">{{courseName}}</common-sub-header>
     </el-header>
     <el-main class="main-gap">
-      <el-collapse accordion>
-        <el-collapse-item>
-          <template slot="title">
-            <div class="content-text bold-text">{{round}}</div>
-          </template>
-          <div v-if="role==='teacher'">
-            <el-row>
-              <el-button
-                type="text"
-                plain
-                class="iconfont icon-shezhi content-text full-width text-start"
-                @click.native.prevent="enterSetting"
-              >该轮轮次设置</el-button>
-            </el-row>
-            <el-collapse accordion>
-              <el-collapse-item>
-                <template slot="title">
-                  <div class="content-text">业务流程分析</div>
-                  <div class="iconfont icon-xiugai orange-text" @click="enterModify"></div>
-                </template>
-                <el-row>
-                  <el-button
-                    type="text"
-                    plain
-                    class="tip-text full-width"
-                    @click.native.prevent="enterSeminar"
-                  >2016(1)</el-button>
-                </el-row>
-              </el-collapse-item>
-            </el-collapse>
-          </div>
-          <div v-else>
-            <el-row>
-              <div class="content-text full-width text-start" @click="enterSeminar">1-业务流程分析</div>
-            </el-row>
-          </div>
-        </el-collapse-item>
-      </el-collapse>
+      <div v-if="sortedRoundSeminarList.length===0" class="content-text bold-text text-center">暂无数据</div>
+      <div v-else>
+        <el-collapse accordion>
+          <el-collapse-item v-for="(item,index) in sortedRoundSeminarList" :key="index">
+            <template slot="title">
+              <div class="content-text bold-text">{{'第'+item.round.order+'轮讨论课'}}</div>
+            </template>
+            <div v-if="role==='teacher'">
+              <el-row>
+                <div
+                  class="iconfont icon-shezhi content-text full-width text-start"
+                  @click="enterSetting(item.round.id)"
+                >该轮轮次设置</div>
+              </el-row>
+              <el-collapse accordion>
+                <el-collapse-item v-for="(seminar,ind) in item.seminarList" :key="ind">
+                  <template slot="title">
+                    <div class="content-text more-text">{{seminar.order+'-'+seminar.topic}}</div>
+                    <div class="iconfont icon-xiugai orange-text" @click="enterModify(seminar.id)"></div>
+                  </template>
+                  <el-row v-for="(classInfo,order) in classList" :key="order">
+                    <el-button
+                      type="text"
+                      plain
+                      class="tip-text full-width"
+                      @click.native.prevent="enterSeminar(seminar.id, classInfo.id)"
+                    >{{classInfo.name}}</el-button>
+                  </el-row>
+                </el-collapse-item>
+              </el-collapse>
+            </div>
+            <div v-else>
+              <el-row v-for="(seminar,ind) in item.seminarList" :key="ind">
+                <div
+                  class="content-text full-width text-start more-text"
+                  @click="enterSeminar(seminar.id, classID)"
+                >{{seminar.order+'-'+seminar.topic}}</div>
+              </el-row>
+            </div>
+          </el-collapse-item>
+        </el-collapse>
+      </div>
       <el-row type="flex" justify="center" v-if="role==='teacher'">
         <el-col :span="12">
           <el-button
@@ -69,51 +73,27 @@
               <el-row type="flex" justify="center">
                 <el-col :span="12">
                   <el-collapse accordion>
-                    <el-collapse-item class="content-text">
+                    <el-collapse-item
+                      class="content-text"
+                      v-for="(item,index) in sortedRoundSeminarList"
+                      :key="index"
+                    >
                       <template slot="title">
-                        <div class="sub-title-text bold-text">{{round}}</div>
+                        <div class="sub-title-text bold-text">{{'第'+item.round.order+'轮讨论课'}}</div>
                       </template>
                       <el-table
-                        :data="tableData"
+                        :data="item.seminarList"
                         :show-header="false"
                         row-class-name="content-text"
                       >
-                        <el-table-column prop="name" align="center"></el-table-column>
+                        <el-table-column prop="topic" align="center"></el-table-column>
                         <el-table-column fixed="right" align="center">
                           <template slot-scope="scope">
                             <el-button
                               plain
                               type="primary"
                               size="small"
-                              @click.native.prevent="enter"
-                            >进入</el-button>
-                          </template>
-                        </el-table-column>
-                      </el-table>
-                    </el-collapse-item>
-                  </el-collapse>
-                </el-col>
-              </el-row>
-              <el-row type="flex" justify="center">
-                <el-col :span="12">
-                  <el-collapse accordion>
-                    <el-collapse-item class="content-text">
-                      <template slot="title">
-                        <div class="sub-title-text bold-text">{{round}}</div>
-                      </template>
-                      <el-table
-                        :data="tableData"
-                        :show-header="false"
-                        row-class-name="content-text"
-                      >
-                        <el-table-column prop="name" align="center"></el-table-column>
-                        <el-table-column fixed="right" align="center">
-                          <template slot-scope="scope">
-                            <el-button
-                              plain
-                              type="primary"
-                              size="small"
-                              @click.native.prevent="enterSeminar"
+                              @click.native.prevent="enterSeminar(scope.row.id)"
                             >进入</el-button>
                           </template>
                         </el-table-column>
@@ -144,32 +124,8 @@ export default {
   },
   data() {
     return {
-      round: "第一轮讨论课",
-      tableData: [{
-        name: "第一次讨论课--需求分析"
-      }, {
-        name: '第二次讨论课--界面原型'
-      }, {
-        name: '第二次讨论课--界面原型'
-      }, {
-        name: '第二次讨论课--界面原型'
-      }, {
-        name: '第二次讨论课--界面原型'
-      }, {
-        name: '第二次讨论课--界面原型'
-      }, {
-        name: '第二次讨论课--界面原型'
-      }, {
-        name: '第二次讨论课--界面原型'
-      }, {
-        name: '第二次讨论课--界面原型'
-      }, {
-        name: '第二次讨论课--界面原型'
-      }, {
-        name: '第二次讨论课--界面原型'
-      }, {
-        name: '第二次讨论课--界面原型'
-      }],
+      roundSeminarList: [],
+      classList: [],
       courseName: undefined,
       dialogFormVisible: false
     }
@@ -183,21 +139,79 @@ export default {
     },
     isMobile() {
       return this.$store.state.isMobile
+    },
+    courseID() {
+      return this.$route.query.courseID
+    },
+    classID() {
+      return this.$route.query.classID
+    },
+    sortedRoundSeminarList() {
+      return this.roundSeminarList.sort((a, b) => {
+        return a.round.order - b.round.order
+      })
     }
   },
   methods: {
-    enterSeminar() {
-      this.$router.push('/seminar/info')
+    enterSeminar(id, classID) {
+      this.$router.push({ path: '/seminar/info', query: { seminarID: id, classID: classID, courseID: this.courseID } })
     },
-    enterSetting() {
-      this.$router.push('/seminar/setting')
+    enterSetting(id) {
+      this.$router.push({ path: '/seminar/setting', query: { roundID: id } })
     },
-    enterModify() {
-      this.$router.push('/seminar/modify')
+    enterModify(id) {
+      this.$router.push({ path: '/seminar/modify', query: { seminarID: id, courseID: this.courseID } })
     },
     enterCreate() {
-      this.$router.push('/seminar/create')
+      this.$router.push({ path: '/seminar/create', query: { courseID: this.courseID } })
     }
+  },
+  created() {
+    this.$http.get('/course/' + this.courseID + '/round').then(response => {
+      response.forEach(element => {
+        this.$http.get('/round/' + element.id + '/seminar').then(res => {
+          let seminarList = []
+          res.forEach((val, index, arr) => {
+            seminarList.push(val)
+          })
+          this.roundSeminarList.push({ round: element, seminarList: seminarList })
+        }).catch(error => {
+          this.$createToast({
+            time: 500,
+            txt: error.message,
+            type: "error"
+          }).show()
+        })
+      })
+    }).catch(error => {
+      this.$createToast({
+        time: 500,
+        txt: error.message,
+        type: "error"
+      }).show()
+    })
+    if (this.role === 'teacher') {
+      this.$http.get('/course/' + this.courseID + '/class').then(response => {
+        response.forEach(element => {
+          this.classList.push(element)
+        })
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
+      })
+    }
+    this.$http.get('/course/' + this.courseID).then(response => {
+      this.courseName = response.name
+    }).catch(error => {
+      this.$createToast({
+        time: 500,
+        txt: error.message,
+        type: "error"
+      }).show()
+    })
   }
 }
 </script>
