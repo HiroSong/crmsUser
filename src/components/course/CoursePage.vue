@@ -1,7 +1,7 @@
 <template>
   <el-container v-if="isMobile">
     <el-header class="header">
-      <common-sub-header :role="role" :is-mobile="true">课程管理</common-sub-header>
+      <common-sub-header :role="role" :is-mobile="true">课程</common-sub-header>
     </el-header>
     <el-main class="main-gap">
       <el-collapse accordion v-if="role==='teacher' && tableData.length!==0">
