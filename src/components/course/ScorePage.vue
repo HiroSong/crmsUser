@@ -317,9 +317,9 @@ export default {
           })
         }
         if (value.teamID !== undefined) {
-          let teamIndex = teamIndexMap.get(value.teamID)
+          let teamIndex = teamIndexMap.get(roundIndex+'-'+value.teamID)
           if (teamIndex === undefined) {
-            teamIndexMap.set(value.teamID, scoreList[roundIndex].teamList.length)
+            teamIndexMap.set(roundIndex+'-'+value.teamID, scoreList[roundIndex].teamList.length)
             teamIndex = scoreList[roundIndex].teamList.length
             scoreList[roundIndex].teamList.push({
               teamID: value.teamID,
