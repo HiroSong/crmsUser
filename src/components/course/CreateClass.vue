@@ -32,7 +32,6 @@
             ref="uploadExcelForCreate"
             :http-request="uploadStudent"
             action
-            :limit="1"
             :multiple="false"
             :file-list="fileList"
             :on-success="submitSuccess"
@@ -83,26 +82,20 @@ export default {
     schemaClass() {
       return {
         fields: [{
-          type: 'textarea',
+          type: 'input',
           modelKey: 'klassTime',
           label: '上课时间',
           props: {
             placeholder: '请输入',
             autoExpand: true
-          },
-          rules: {
-            require: true
           }
         }, {
-          type: 'textarea',
+          type: 'input',
           modelKey: 'klassLocation',
           label: '上课地点',
           props: {
             placeholder: '请输入',
             autoExpand: true
-          },
-          rules: {
-            require: true
           }
         }]
       }
@@ -110,6 +103,10 @@ export default {
   },
   methods: {
     uploadStudent(param) {
+      if (param === undefined) {
+        this.submitSuccess()
+        return
+      }
       let formData = new FormData();
       formData.append("file", param.file);
       this.$http.post('/class/' + this.classID + '/student', formData, {
@@ -139,11 +136,12 @@ export default {
     createClass() {
       if (!this.gradeValid || !this.klassSerialValid)
         return
+      this.classInfo.klassTime = this.classInfo.klassTime === undefined ? '' : this.classInfo.klassTime
+      this.classInfo.klassLocation = this.classInfo.klassLocation === undefined ? '' : this.classInfo.klassLocation
       this.$http.post('/course/' + this.courseID + '/class', this.classInfo).then(response => {
         this.classID = response.klassID
-        if (this.fileList.length !== 0) {
-          this.$refs.uploadExcelForCreate.submit()
-        } else {
+        this.$refs.uploadExcelForCreate.submit()
+        if (this.fileList.length === 0) {
           this.submitSuccess()
         }
       }).catch(error => {

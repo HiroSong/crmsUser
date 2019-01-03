@@ -79,7 +79,6 @@
                         <el-upload
                           :http-request="uploadStudent"
                           :action="'/class/' + scope.row.id + '/student'"
-                          :limit="1"
                           :multiple="false"
                           :show-file-list="false"
                           :file-list="fileList"
