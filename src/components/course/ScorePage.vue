@@ -23,13 +23,13 @@
                   @click.native="searchScore(items,item)"
                 >
                   <template slot="title">
-                    <div class="content-text">{{item.teamName+' ('+item.roundScore+')'}}</div>
+                    <div class="content-text more-text">{{item.teamName+' ('+item.roundScore+')'}}</div>
                   </template>
                   <div v-for="(seminar, seminarInd) in item.score" :key="seminarInd">
                     <el-row>
                       <div class="content-text text-center">{{seminar.seminarName}}</div>
                     </el-row>
-                    <div v-if="needModify">
+                    <div v-if="needModify&&seminar.seminarName!=='本轮次成绩'">
                       <el-row>
                         <el-col :span="8" :offset="3">
                           <div class="tip-text">展示:</div>
@@ -73,7 +73,7 @@
                       plain
                       class="orange-text"
                       size="mini"
-                      @click.native.prevent="confirmModify"
+                      @click.native.prevent="confirmModify(item)"
                     >确定</el-button>
                     <el-button
                       v-else
@@ -317,9 +317,9 @@ export default {
           })
         }
         if (value.teamID !== undefined) {
-          let teamIndex = teamIndexMap.get(roundIndex+'-'+value.teamID)
+          let teamIndex = teamIndexMap.get(roundIndex + '-' + value.teamID)
           if (teamIndex === undefined) {
-            teamIndexMap.set(roundIndex+'-'+value.teamID, scoreList[roundIndex].teamList.length)
+            teamIndexMap.set(roundIndex + '-' + value.teamID, scoreList[roundIndex].teamList.length)
             teamIndex = scoreList[roundIndex].teamList.length
             scoreList[roundIndex].teamList.push({
               teamID: value.teamID,
@@ -379,13 +379,34 @@ export default {
     modifyScore() {
       this.needModify = true
     },
-    confirmModify() {
-      this.$createToast({
-        time: 500,
-        txt: '修改成功',
-        type: 'correct'
-      }).show()
-      this.needModify = false
+    confirmModify(round) {
+      let teamID = round.teamID
+      round.score.forEach((seminar, index, array) => {
+        if (seminar.seminarID !== undefined) {
+          this.$http.put('/seminar/' + seminar.seminarID + '/team/' + teamID + '/seminarscore', {
+            presentationScore: seminar.presentationScore,
+            questionScore: seminar.questionScore,
+            reportScore: seminar.reportScore
+          }).then(() => {
+            if (index === round.score.length - 2) {
+              this.$createToast({
+                time: 500,
+                txt: '修改成功',
+                type: 'correct',
+                onTimeout: () => {
+                  this.needModify = false
+                }
+              }).show()
+            }
+          }).catch(error => {
+            this.$createToast({
+              time: 500,
+              txt: error.message,
+              type: 'error'
+            }).show()
+          })
+        }
+      })
     },
     searchTeam(item) {
       let roundIndex = this.roundMap.get(item.roundID)
@@ -393,29 +414,21 @@ export default {
         return
       }
       this.roundMap.set(item.roundID, item.roundID)
-      this.$http.get('/course/' + this.courseID + '/team').then(teams => {
-        teams.forEach(team => {
-          this.$http.get('/round/' + item.roundID + '/team/' + team.id + '/roundscore').then(roundScore => {
-            this.tableData.push({
-              roundID: item.roundID,
-              round: item.round,
-              teamID: team.id,
-              teamName: team.klassSerial + '-' + team.teamSerial,
-              roundScore: roundScore.totalScore,
-              seminarID: undefined,
-              seminarOrder: undefined,
-              seminarName: '本轮次成绩',
-              presentationScore: roundScore.preScore,
-              questionScore: roundScore.questionScore,
-              reportScore: roundScore.reportScore,
-              totalScore: roundScore.totalScore
-            })
-          }).catch(error => {
-            this.$createToast({
-              time: 500,
-              txt: error.message,
-              type: 'error'
-            }).show()
+      this.$http.get('/round/' + item.roundID + '/roundscore').then(roundScoreList => {
+        roundScoreList.forEach(roundScore => {
+          this.tableData.push({
+            roundID: item.roundID,
+            round: item.round,
+            teamID: roundScore.teamID,
+            teamName: roundScore.teamName,
+            roundScore: roundScore.totalScore,
+            seminarID: undefined,
+            seminarOrder: undefined,
+            seminarName: '本轮次成绩',
+            presentationScore: roundScore.preScore,
+            questionScore: roundScore.questionScore,
+            reportScore: roundScore.reportScore,
+            totalScore: roundScore.totalScore
           })
         })
       }).catch(error => {
