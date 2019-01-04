@@ -273,28 +273,39 @@ export default {
         enrollStartTime: this.seminarInfo.signUpStartTime,
         enrollEndTime: this.seminarInfo.signUpEndTime
       }).then(() => {
-        this.classList.forEach((element, index, array) => {
-          this.$http.put('/seminar/' + this.seminarID + '/class/' + element.id + '/reportddl', {
-            reportDDL: element.reportEndTime
-          }).then(() => {
-            if (index === this.classList.length - 1) {
+        if (this.classList.length === 0) {
+          this.$createToast({
+            time: 500,
+            txt: '修改成功',
+            type: 'correct',
+            onTimeout: () => {
+              this.$router.back()
+            }
+          }).show()
+        } else {
+          this.classList.forEach((element, index, array) => {
+            this.$http.put('/seminar/' + this.seminarID + '/class/' + element.id + '/reportddl', {
+              reportDDL: element.reportEndTime
+            }).then(() => {
+              if (index === this.classList.length - 1) {
+                this.$createToast({
+                  time: 500,
+                  txt: '修改成功',
+                  type: 'correct',
+                  onTimeout: () => {
+                    this.$router.back()
+                  }
+                }).show()
+              }
+            }).catch(error => {
               this.$createToast({
                 time: 500,
-                txt: '修改成功',
-                type: 'correct',
-                onTimeout: () => {
-                  this.$router.back()
-                }
+                txt: error.message,
+                type: "error"
               }).show()
-            }
-          }).catch(error => {
-            this.$createToast({
-              time: 500,
-              txt: error.message,
-              type: "error"
-            }).show()
+            })
           })
-        })
+        }
       }).catch(error => {
         this.$createToast({
           time: 500,
