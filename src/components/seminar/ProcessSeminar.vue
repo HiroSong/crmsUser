@@ -427,7 +427,8 @@ export default {
       }).show()
     },
     nextAttendance() {
-      if (this.curSelectedAttendance + 1 === this.attendanceList.length) {
+      if (this.curAttendance + 1 === this.attendanceList.length) {
+        this.curSelectedAttendance = this.curAttendance
         this.$createDialog({
           type: 'confirm',
           title: '提示',
