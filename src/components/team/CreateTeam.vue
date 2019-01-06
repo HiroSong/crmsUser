@@ -52,7 +52,8 @@ export default {
       ungroupedList: [],
       memberList: [],
       teamNameValid: true,
-      classValid: true
+      classValid: true,
+      teamSerial: 0
     }
   },
   computed: {
@@ -65,6 +66,16 @@ export default {
     members() {
       let mem = []
       this.memberList.forEach(item => mem.push({ id: item }))
+      return mem
+    },
+    classSerial() {
+      let serial = ""
+      this.classOptions.forEach(item => {
+        if (item.value === this.selectedClass) {
+          serial = item.text.split('(')[1].split(')')[0]
+        }
+      })
+      return parseInt(serial)
     }
   },
   methods: {
@@ -72,35 +83,51 @@ export default {
       if (!(this.teamNameValid && this.classValid)) {
         return
       }
-      this.$http.post('/course/' + this.courseID + '/team', {
-        teamName: this.teamName,
-        course: {
-          id: this.courseID
-        },
-        klass: {
-          id: this.selectedClass
-        },
-        leader: {
-          id: this.id
-        },
-        members: this.members
-      }).then(response =>
-        this.$createToast({
-          time: 500,
-          txt: '创建成功',
-          type: 'correct',
-          onTimeout: () => {
-            this.$router.back()
+      this.$http.get('/course/' + this.courseID + '/team').then(teams => {
+        let classTeam = []
+        teams.forEach(item => {
+          if (this.classSerial === item.klassSerial) {
+            classTeam.push(item)
           }
-        }).show()
-      ).catch(error => {
+        })
+        this.teamSerial = classTeam.length + 1
+        this.$http.post('/course/' + this.courseID + '/team', {
+          teamName: this.teamName,
+          teamSerial: this.teamSerial,
+          course: {
+            id: parseInt(this.courseID)
+          },
+          klass: {
+            id: parseInt(this.selectedClass),
+            klassSerial: this.classSerial
+          },
+          leader: {
+            id: parseInt(this.id)
+          },
+          members: this.members
+        }).then(response =>
+          this.$createToast({
+            time: 500,
+            txt: '创建成功',
+            type: 'correct',
+            onTimeout: () => {
+              this.$router.back()
+            }
+          }).show()
+        ).catch(error => {
+          this.$createToast({
+            time: 500,
+            txt: error.message,
+            type: "error"
+          }).show()
+        })
+      }).catch(error => {
         this.$createToast({
           time: 500,
           txt: error.message,
           type: "error"
         }).show()
       })
-
     }
   },
   created() {

@@ -67,7 +67,11 @@
           </div>
         </el-collapse-item>
       </el-collapse>
-      <el-row type="flex" justify="center" v-if="role!=='teacher'&&myTeam===undefined&&!isExpired">
+      <el-row
+        type="flex"
+        justify="center"
+        v-if="role!=='teacher'&&myTeam===undefined&&isMainCourse"
+      >
         <el-col :span="12">
           <el-button
             plain
@@ -90,10 +94,10 @@ export default {
   },
   data() {
     return {
-      isExpired: undefined,
       myTeam: undefined,
       teamList: [],
-      noTeamList: []
+      noTeamList: [],
+      isMainCourse: true
     }
   },
   computed: {
@@ -140,6 +144,19 @@ export default {
           type: "error"
         }).show()
       })
+      this.$http.get('/course/' + this.courseID + '/teamshare').then(response => {
+        response.forEach(item => {
+          if (!item.isMainCourse) {
+            this.isMainCourse = false
+          }
+        })
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
+      })
     }
     this.$http.get('/course/' + this.courseID + '/team').then(response =>
       response.forEach(element => {
@@ -159,15 +176,6 @@ export default {
         this.noTeamList.push(element)
       })
     ).catch(error => {
-      this.$createToast({
-        time: 500,
-        txt: error.message,
-        type: "error"
-      }).show()
-    })
-    this.$http.get('/course/' + this.courseID).then(response => {
-      this.isExpired = (new Date()).getTime() > this.$datetimeFormat.toDate(response.endTeamTime).getTime()
-    }).catch(error => {
       this.$createToast({
         time: 500,
         txt: error.message,

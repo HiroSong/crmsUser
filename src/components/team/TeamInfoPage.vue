@@ -68,57 +68,59 @@
           </el-col>
         </el-row>
       </div>
-      <div v-if="isLeader">
-        <el-row>
-          <div class="tip-text bold-text small-gap">添加成员</div>
-        </el-row>
-        <div style="height: 35vh" class="small-gap">
-          <el-scrollbar class="full-height">
-            <cube-checkbox-group
-              v-model="newMemberList"
-              :options="sortedNoTeamList"
-              class="tip-text"
-            >
-              <cube-checkbox
-                v-for="(item,index) in sortedNoTeamList"
-                :key="index"
-                :option="{value: item.id, label: item.account+' '+item.name}"
-              ></cube-checkbox>
-            </cube-checkbox-group>
-          </el-scrollbar>
+      <div v-if="isMainCourse">
+        <div v-if="isLeader">
+          <el-row>
+            <div class="tip-text bold-text small-gap">添加成员</div>
+          </el-row>
+          <div style="height: 35vh" class="small-gap">
+            <el-scrollbar class="full-height">
+              <cube-checkbox-group
+                v-model="newMemberList"
+                :options="sortedNoTeamList"
+                class="tip-text"
+              >
+                <cube-checkbox
+                  v-for="(item,index) in sortedNoTeamList"
+                  :key="index"
+                  :option="{value: item.id, label: item.account+' '+item.name}"
+                ></cube-checkbox>
+              </cube-checkbox-group>
+            </el-scrollbar>
+          </div>
+          <el-row type="flex" justify="space-between">
+            <el-button
+              type="danger"
+              plain
+              class="normal-gap"
+              size="mini"
+              @click.native.prevent="dismissTeam"
+            >解散</el-button>
+            <el-button
+              v-if="isInvalid"
+              plain
+              class="orange-text normal-gap"
+              size="mini"
+              @click.native.prevent="sendApplication"
+            >发送申请</el-button>
+            <el-button
+              plain
+              class="orange-text normal-gap"
+              size="mini"
+              @click.native.prevent="addMember"
+            >添加</el-button>
+          </el-row>
         </div>
-        <el-row type="flex" justify="space-between">
+        <el-row v-else type="flex" justify="end">
           <el-button
             type="danger"
             plain
             class="normal-gap"
             size="mini"
-            @click.native.prevent="dismissTeam"
-          >解散</el-button>
-          <el-button
-            v-if="isInvalid"
-            plain
-            class="orange-text normal-gap"
-            size="mini"
-            @click.native.prevent="sendApplication"
-          >发送申请</el-button>
-          <el-button
-            plain
-            class="orange-text normal-gap"
-            size="mini"
-            @click.native.prevent="addMember"
-          >添加</el-button>
+            @click.native.prevent="leaveTeam"
+          >退出</el-button>
         </el-row>
       </div>
-      <el-row v-else type="flex" justify="end">
-        <el-button
-          type="danger"
-          plain
-          class="normal-gap"
-          size="mini"
-          @click.native.prevent="leaveTeam"
-        >退出</el-button>
-      </el-row>
     </el-main>
   </el-container>
 </template>
@@ -133,12 +135,12 @@ export default {
   },
   data() {
     return {
-      isExpired: undefined,
       noTeamList: [],
       newMemberList: [],
       myTeam: undefined,
       courseName: undefined,
-      className: undefined
+      className: undefined,
+      isMainCourse: true
     }
   },
   computed: {
@@ -342,7 +344,6 @@ export default {
     this.updateList()
     this.$http.get('/course/' + this.courseID).then(response => {
       this.courseName = response.name
-      this.isExpired = (new Date()).getTime() > this.$datetimeFormat.toDate(response.endTeamTime).getTime()
     }).catch(error => {
       this.$createToast({
         time: 500,
@@ -352,6 +353,19 @@ export default {
     })
     this.$http.get('/class/' + this.classID).then(response => this.className = response.grade + ' (' + response.klassSerial + ')'
     ).catch(error => {
+      this.$createToast({
+        time: 500,
+        txt: error.message,
+        type: "error"
+      }).show()
+    })
+    this.$http.get('/course/' + this.courseID + '/teamshare').then(response => {
+      response.forEach(item => {
+        if (!item.isMainCourse) {
+          this.isMainCourse = false
+        }
+      })
+    }).catch(error => {
       this.$createToast({
         time: 500,
         txt: error.message,
