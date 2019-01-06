@@ -59,7 +59,7 @@
     </el-header>
     <el-container>
       <el-aside width="15vw">
-        <common-aside role="teacher"></common-aside>
+        <common-aside role="teacher" :courseID="courseID"></common-aside>
       </el-aside>
       <el-main class="main-gap">
         <title-card>{{modifiedTitle}}</title-card>

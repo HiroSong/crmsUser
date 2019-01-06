@@ -249,7 +249,7 @@
     </el-header>
     <el-container>
       <el-aside width="15vw">
-        <common-aside :role="role"></common-aside>
+        <common-aside :role="role" :courseID="courseID" :class="classID"></common-aside>
       </el-aside>
       <el-main class="main-gap">
         <title-card>{{modifiedTitle}}</title-card>
@@ -288,6 +288,7 @@
                       class="content-text"
                       size="medium"
                       no-data-text="暂时没有班级可选"
+                      @change="getAttendance"
                     >
                       <el-option
                         v-for="(item,index) in classList"
@@ -302,32 +303,30 @@
               </el-col>
             </el-row>
             <el-row class="content-text bold-text text-center small-gap">
-              <el-col :span="6">展示次序</el-col>
-              <el-col :span="6">小组序号</el-col>
-              <el-col :span="6">组长</el-col>
-              <el-col :span="6" v-if="seminarInfo.status==='已结束'">展示报告</el-col>
-              <el-col :span="6" v-else>展示材料</el-col>
+              <el-col :span="8">展示次序</el-col>
+              <el-col :span="8">小组序号</el-col>
+              <el-col :span="8" v-if="seminarInfo.status==='已结束'">展示报告</el-col>
+              <el-col :span="8" v-else>展示材料</el-col>
             </el-row>
           </div>
           <div style="height: 20vh">
             <el-scrollbar class="full-height">
-              <el-table :data="teamList" :show-header="false" row-class-name="content-text">
-                <el-table-column prop="order" align="center"></el-table-column>
-                <el-table-column prop="name" align="center"></el-table-column>
-                <el-table-column prop="leader" align="center"></el-table-column>
+              <el-table :data="attendanceList" :show-header="false" row-class-name="content-text">
+                <el-table-column prop="teamOrder" align="center"></el-table-column>
+                <el-table-column prop="teamNumber" align="center"></el-table-column>
                 <el-table-column align="center">
                   <template slot-scope="scope">
                     <div v-if="seminarInfo.status==='未开始'">
-                      <div v-if="scope.row.pptStatus===true">已上传</div>
-                      <div v-else-if="scope.row.pptStatus===false">未上传</div>
+                      <div v-if="scope.row.pptUrl!==undefined">已上传</div>
+                      <div v-else>未上传</div>
                     </div>
                     <div v-else-if="seminarInfo.status==='已结束'">
-                      <el-button plain size="small" v-if="scope.row.reportStatus===true">下载</el-button>
-                      <div v-else-if="scope.row.reportStatus===false">未上传</div>
+                      <el-button plain size="small" v-if="scope.row.reportUrl!==undefined">下载</el-button>
+                      <div v-else>未上传</div>
                     </div>
                     <div v-else>
-                      <el-button plain size="small" v-if="scope.row.pptStatus===true">下载</el-button>
-                      <div v-else-if="scope.row.pptStatus===false">未上传</div>
+                      <el-button plain size="small" v-if="scope.row.pptUrl!==undefined">下载</el-button>
+                      <div v-else>未上传</div>
                     </div>
                   </template>
                 </el-table-column>
@@ -339,26 +338,24 @@
           <div slot="header">
             <span class="sub-title-text bold-text">已报名小组</span>
             <el-row class="content-text bold-text text-center small-gap">
-              <el-col :span="5">展示次序</el-col>
-              <el-col :span="5">小组序号</el-col>
-              <el-col :span="5">组长</el-col>
-              <el-col :span="5" v-if="seminarInfo.status==='已结束'">展示报告</el-col>
-              <el-col :span="5" v-else>展示材料</el-col>
+              <el-col :span="6">展示次序</el-col>
+              <el-col :span="6">小组序号</el-col>
+              <el-col :span="6" v-if="seminarInfo.status==='已结束'">展示报告</el-col>
+              <el-col :span="6" v-else>展示材料</el-col>
             </el-row>
           </div>
           <div style="height: 25vh">
             <el-scrollbar class="full-height">
-              <el-table :data="teamList" :show-header="false" row-class-name="content-text">
-                <el-table-column prop="order" min-width="20.83%" align="center"></el-table-column>
-                <el-table-column prop="name" min-width="20.83%" align="center"></el-table-column>
-                <el-table-column prop="leader" min-width="20.83%" align="center"></el-table-column>
-                <el-table-column min-width="20.83%" align="center">
+              <el-table :data="attendanceList" :show-header="false" row-class-name="content-text">
+                <el-table-column prop="teamOrder" align="center"></el-table-column>
+                <el-table-column prop="teamNumber" align="center"></el-table-column>
+                <el-table-column align="center">
                   <template slot-scope="scope">
                     <div v-if="seminarInfo.status==='未开始'">
                       <div v-if="scope.row.id===attendanceID">
-                        <div v-if="scope.row.pptStatus===true">已上传</div>
+                        <div v-if="scope.row.pptUrl!==undefined">已上传</div>
                         <el-upload
-                          v-else-if="scope.row.pptStatus===false"
+                          v-else
                           :http-request="uploadFile"
                           :action="'/attendance/' + attendanceID + '/ppt'"
                           :multiple="false"
@@ -369,21 +366,21 @@
                         </el-upload>
                       </div>
                       <div v-else>
-                        <div v-if="scope.row.pptStatus===true">已上传</div>
-                        <div v-else-if="scope.row.pptStatus===false">未上传</div>
+                        <div v-if="scope.row.pptUrl!==undefined">已上传</div>
+                        <div v-else>未上传</div>
                       </div>
                     </div>
                     <div v-else-if="seminarInfo.status==='已结束'">
-                      <el-button plain size="small" v-if="scope.row.reportStatus===true">下载</el-button>
-                      <div v-else-if="scope.row.reportStatus===false">未上传</div>
+                      <el-button plain size="small" v-if="scope.row.reportUrl!==undefined">下载</el-button>
+                      <div v-else>未上传</div>
                     </div>
                     <div v-else>
-                      <el-button plain size="small" v-if="scope.row.pptStatus===true">下载</el-button>
-                      <div v-else-if="scope.row.pptStatus===false">未上传</div>
+                      <el-button plain size="small" v-if="scope.row.pptUrl!==undefined">下载</el-button>
+                      <div v-else>未上传</div>
                     </div>
                   </template>
                 </el-table-column>
-                <el-table-column min-width="16.68%" align="center">
+                <el-table-column align="center">
                   <template slot-scope="scope">
                     <div v-if="scope.row.id===undefined">
                       <div v-if="seminarInfo.status==='未开始'">
@@ -411,14 +408,9 @@
                             plain
                             slot="trigger"
                             size="small"
-                            v-if="scope.row.reportStatus===true"
+                            v-if="scope.row.reportUrl!==undefined"
                           >重新上传</el-button>
-                          <el-button
-                            plain
-                            slot="trigger"
-                            size="small"
-                            v-else-if="scope.row.reportStatus===false"
-                          >上传</el-button>
+                          <el-button plain slot="trigger" size="small" v-else>上传</el-button>
                         </el-upload>
                       </div>
                       <div v-else>
@@ -434,14 +426,9 @@
                             plain
                             slot="trigger"
                             size="small"
-                            v-if="scope.row.pptStatus===true"
+                            v-if="scope.row.pptUrl!==undefined"
                           >重新上传</el-button>
-                          <el-button
-                            plain
-                            slot="trigger"
-                            size="small"
-                            v-else-if="scope.row.pptStatus===false"
-                          >上传</el-button>
+                          <el-button plain slot="trigger" size="small" v-else>上传</el-button>
                         </el-upload>
                       </div>
                     </div>
@@ -487,20 +474,12 @@ export default {
         signupEndTime: undefined,
         reportDDL: undefined
       },
-      emptyReccord: {
-        id: undefined,
-        order: undefined,
-        name: undefined,
-        leader: undefined,
-        pptStatus: undefined,
-        reportStatus: undefined
-      },
       attendanceInfo: {
         basicInfo: undefined,
         ppt: false,
         report: false
       },
-      teamList: [],
+      attendanceList: [],
       message: undefined,
       attendanceID: undefined,
       messageVisible: false,
@@ -529,7 +508,7 @@ export default {
       return this.$store.state.isMobile
     },
     teamNum() {
-      return this.teamList.filter((element, index, array) => {
+      return this.attendanceList.filter((element, index, array) => {
         return element.id !== undefined
       }).length
     },
@@ -707,6 +686,90 @@ export default {
         this.message = '提交成功！'
         this.messageVisible = true
       }
+    },
+    getAttendance() {
+      this.attendanceList = []
+      this.$http.get('/seminar/' + this.seminarID + '/class/' + this.selectedClass + '/attendance').then(response => {
+        response.forEach((item, index, array) => {
+          this.$http.get('/attendance/' + item.id + '/ppt').then(res => {
+            this.attendanceList.push({
+              id: item.id,
+              teamOrder: item.teamOrder,
+              teamNumber: item.teamNumber,
+              pptName: res.name === null ? undefined : res.name,
+              pptUrl: res.url === null ? undefined : 'http://47.107.69.160:8080/download/attendance/' + item.id + '/ppt/' + res.url,
+              reportName: report.name === null ? undefined : report.name,
+              reportUrl: report.url === null ? undefined : 'http://47.107.69.160:8080/download/attendance/' + item.id + '/ppt/' + report.url
+            })
+            if (this.attendanceList.length === response.length) {
+              let tempList = this.attendanceList.sort((a, b) => a.teamOrder - b.teamOrder)
+              tempList.forEach((item, index, arr) => {
+
+              })
+              let curIndex = 1
+              tempList.forEach(item => {
+                while (item.teamOrder > curIndex) {
+                  this.attendanceList.push({
+                    id: undefined,
+                    teamOrder: curIndex,
+                    teamNumber: undefined,
+                    pptName: undefined,
+                    pptUrl: undefined
+                  })
+                  curIndex++
+                }
+                curIndex++
+              })
+              while (curIndex < this.teamLimit) {
+                this.attendanceList.push({
+                  id: undefined,
+                  teamOrder: curIndex,
+                  teamNumber: undefined,
+                  pptName: undefined,
+                  pptUrl: undefined
+                })
+                curIndex++
+              }
+              this.attendanceList = this.attendanceList.sort((a, b) => a.teamOrder - b.teamOrder)
+            }
+          }).catch(error => {
+            this.$createToast({
+              time: 500,
+              txt: error.message,
+              type: "error"
+            }).show()
+          }).catch(error => {
+            this.$createToast({
+              time: 500,
+              txt: error.message,
+              type: "error"
+            }).show()
+          })
+        })
+        if (response.length === 0) {
+          for (var i = 0; i < this.teamLimit; i++) {
+            this.attendanceList.push({
+              id: undefined,
+              teamOrder: i,
+              teamNumber: undefined,
+              pptName: undefined,
+              pptUrl: undefined
+            })
+          }
+        }
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
+      })
     }
   },
   created() {
@@ -793,6 +856,87 @@ export default {
           type: "error"
         }).show()
       })
+      if (this.role === 'student') {
+        this.attendanceList = []
+        this.$http.get('/seminar/' + this.seminarID + '/class/' + this.classID + '/attendance').then(response => {
+          response.forEach((item, index, array) => {
+            this.$http.get('/attendance/' + item.id + '/ppt').then(res => {
+              this.$http.get('/attendance/' + item.id + '/report').then(report => {
+
+                this.attendanceList.push({
+                  id: item.id,
+                  teamOrder: item.teamOrder,
+                  teamNumber: item.teamNumber,
+                  pptName: res.name === null ? undefined : res.name,
+                  pptUrl: res.url === null ? undefined : 'http://47.107.69.160:8080/download/attendance/' + item.id + '/ppt/' + res.url,
+                  reportName: report.name === null ? undefined : report.name,
+                  reportUrl: report.url === null ? undefined : 'http://47.107.69.160:8080/download/attendance/' + item.id + '/ppt/' + report.url
+                })
+                if (this.attendanceList.length === response.length) {
+                  let tempList = this.attendanceList.sort((a, b) => a.teamOrder - b.teamOrder)
+                  tempList.forEach((item, index, arr) => {
+
+                  })
+                  let curIndex = 1
+                  tempList.forEach(item => {
+                    while (item.teamOrder > curIndex) {
+                      this.attendanceList.push({
+                        id: undefined,
+                        teamOrder: curIndex,
+                        teamNumber: undefined,
+                        pptName: undefined,
+                        pptUrl: undefined
+                      })
+                      curIndex++
+                    }
+                    curIndex++
+                  })
+                  while (curIndex < this.teamLimit) {
+                    this.attendanceList.push({
+                      id: undefined,
+                      teamOrder: curIndex,
+                      teamNumber: undefined,
+                      pptName: undefined,
+                      pptUrl: undefined
+                    })
+                    curIndex++
+                  }
+                  this.attendanceList = this.attendanceList.sort((a, b) => a.teamOrder - b.teamOrder)
+                }
+              })
+            }).catch(error => {
+              this.$createToast({
+                time: 500,
+                txt: error.message,
+                type: "error"
+              }).show()
+            }).catch(error => {
+              this.$createToast({
+                time: 500,
+                txt: error.message,
+                type: "error"
+              }).show()
+            })
+          })
+          if (response.length === 0) {
+            for (var i = 0; i < this.teamLimit; i++) {
+              this.attendanceList.push({
+                id: undefined,
+                teamOrder: i,
+                teamNumber: undefined,
+                pptName: undefined,
+                pptUrl: undefined
+              })
+            }
+          }
+        }).catch(error => {
+          this.$createToast({
+            time: 500,
+            txt: error.message,
+            type: "error"
+          }).show()
+        })
+      }
     }
   }
 }

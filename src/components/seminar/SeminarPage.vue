@@ -63,7 +63,7 @@
     </el-header>
     <el-container>
       <el-aside width="15vw">
-        <common-aside :role="role"></common-aside>
+        <common-aside :role="role" :courseID="courseID" :class="classID"></common-aside>
       </el-aside>
       <el-main class="main-gap">
         <title-card>{{modifiedTitle}}</title-card>
@@ -93,7 +93,7 @@
                               plain
                               type="primary"
                               size="small"
-                              @click.native.prevent="enterSeminar(scope.row.id)"
+                              @click.native.prevent="enterSeminar(scope.row.id,classID)"
                             >进入</el-button>
                           </template>
                         </el-table-column>

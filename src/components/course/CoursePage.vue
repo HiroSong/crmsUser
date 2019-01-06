@@ -89,11 +89,15 @@
             <el-row type="flex" justify="center">
               <el-col :span="12">
                 <el-table :data="tableData" row-class-name="content-text" :show-header="false">
-                  <el-table-column prop="name" align="center"></el-table-column>
+                  <el-table-column prop="courseName" align="center"></el-table-column>
                   <el-table-column fixed="right" align="center">
                     <template slot-scope="scope">
                       <el-row type="flex" justify="center">
-                        <el-button plain size="small" @click.native.prevent="enter">进入</el-button>
+                        <el-button
+                          plain
+                          size="small"
+                          @click.native.prevent="enter(scope.row.id,scope.row.klassID)"
+                        >进入</el-button>
                       </el-row>
                     </template>
                   </el-table-column>
@@ -133,8 +137,12 @@ export default {
     }
   },
   methods: {
-    enter() {
-      this.$router.push('/seminar')
+    enter(id, classID) {
+      if (this.role === 'teacher') {
+        this.$router.push({ path: '/seminar', query: { courseID: id } })
+      } else {
+        this.$router.push({ path: '/seminar', query: { courseID: id, classID: classID } })
+      }
     }
   },
   created() {
