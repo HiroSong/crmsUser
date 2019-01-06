@@ -202,10 +202,18 @@ export default {
       }).show()
     },
     addMember() {
-      let success = true
       this.newMemberList.forEach(item => {
-        this.$http.put('/team/' + this.myTeam.id + '/member/new', { id: item }).then().catch(error => {
-          success = false
+        this.$http.put('/team/' + this.myTeam.id + '/member/new', { id: item }).then(() => {
+          this.$createToast({
+            time: 500,
+            txt: '成员添加成功！',
+            type: 'correct',
+            onTimeout: () => {
+              this.newMemberList = []
+              this.updateList()
+            }
+          }).show()
+        }).catch(error => {
           this.$createToast({
             time: 500,
             txt: error.message,
@@ -213,17 +221,6 @@ export default {
           }).show()
         })
       })
-      if (success) {
-        this.$createToast({
-          time: 500,
-          txt: '成员添加成功！',
-          type: 'correct',
-          onTimeout: () => {
-            this.newMemberList = []
-            this.updateList()
-          }
-        }).show()
-      }
     },
     leaveTeam() {
       this.$createDialog({
