@@ -264,7 +264,7 @@ export default {
       this.$http.put('/seminar/' + this.seminarID, {
         id: this.seminarInfo.id,
         seminarName: this.seminarInfo.topic,
-        introduction: this.seminarInfo.intro,
+        introduction: this.seminarInfo.intro ? ' ' : this.seminarInfo.intro,
         maxTeam: this.seminarInfo.teamNumLimit,
         beVisible: this.seminarInfo.beVisible ? 1 : 0,
         seminarSerial: this.seminarInfo.order,

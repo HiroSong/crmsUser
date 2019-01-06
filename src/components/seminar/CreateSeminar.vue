@@ -16,7 +16,7 @@
           ></cube-input>
         </cube-validator>
         <cube-textarea
-          v-model="seminarInfo.require"
+          v-model="seminarInfo.intro"
           placeholder="讨论课主要内容、要求、具体讨论部分..."
           class="content-text"
         ></cube-textarea>
@@ -82,7 +82,7 @@ export default {
     return {
       seminarInfo: {
         topic: undefined,
-        require: undefined,
+        intro: undefined,
         order: undefined,
         beVisible: true,
         signUpStartTime: undefined,
@@ -193,7 +193,7 @@ export default {
       }
       this.$http.post('/course/' + this.courseID + '/seminar', {
         seminarName: this.seminarInfo.topic,
-        introduction: this.seminarInfo.intro,
+        introduction: this.seminarInfo.intro ? ' ' : this.seminarInfo.intro,
         maxTeam: this.seminarInfo.teamNumLimit,
         beVisible: this.seminarInfo.beVisible ? 1 : 0,
         seminarSerial: this.seminarInfo.order,

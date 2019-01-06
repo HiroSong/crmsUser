@@ -1,7 +1,7 @@
 <template>
   <el-container v-if="isMobile">
     <el-header class="header">
-      <common-sub-header :role="role" :is-mobile="true">{{courseName+'-讨论课'}}</common-sub-header>
+      <common-sub-header :role="role" :is-mobile="true">{{seminarInfo.topic}}</common-sub-header>
     </el-header>
     <el-main class="main-gap">
       <el-table :data="infoData" :show-header="false">
@@ -38,17 +38,6 @@
             </el-col>
           </el-row>
         </div>
-        <div v-else-if="seminarInfo.status==='暂停计时'">
-          <el-row type="flex" justify="center" class="small-gap">
-            <el-col :span="12">
-              <el-button
-                plain
-                class="orange-text full-width"
-                @click.native.prevent="continueSeminar"
-              >继续讨论课</el-button>
-            </el-col>
-          </el-row>
-        </div>
         <div v-else-if="seminarInfo.status==='未开始'">
           <el-row type="flex" justify="center" class="small-gap">
             <el-col :span="12">
@@ -60,7 +49,7 @@
             </el-col>
           </el-row>
         </div>
-        <div v-else-if="seminarInfo.status==='已完成'">
+        <div v-else>
           <el-row type="flex" justify="center" class="small-gap">
             <el-col :span="12">
               <el-button
@@ -82,7 +71,7 @@
         </div>
       </div>
       <div v-else>
-        <div v-if="seminarInfo.status==='正在进行'||seminarInfo.status==='暂停计时'">
+        <div v-if="seminarInfo.status==='正在进行'">
           <el-row type="flex" justify="center" class="normal-gap">
             <el-col :span="12">
               <el-button
@@ -92,16 +81,22 @@
               >进入讨论课</el-button>
             </el-col>
           </el-row>
-          <el-row v-if="attendanceId!==undefined" type="flex" justify="center" class="small-gap">
+          <el-row v-if="attendanceID!==undefined" type="flex" justify="center" class="small-gap">
             <el-col :span="12">
-              <el-upload action="上传地址" :limit="1" :multiple="false" :show-file-list="false">
+              <el-upload
+                :http-request="uploadFile"
+                :action="'/attendance/' + attendanceID + '/ppt'"
+                :multiple="false"
+                :show-file-list="false"
+                :on-success="submitSuccess"
+              >
                 <el-button plain class="orange-text full-width">PPT提交</el-button>
               </el-upload>
             </el-col>
           </el-row>
         </div>
         <div v-else-if="seminarInfo.status==='未开始'">
-          <div v-if="attendanceId!==undefined">
+          <div v-if="attendanceID!==undefined">
             <el-table :data="pptData" :show-header="false">
               <el-table-column min-width="40%">
                 <template slot-scope="scope">
@@ -135,7 +130,13 @@
             </el-table>
             <el-row type="flex" justify="center" class="small-gap">
               <el-col :span="12">
-                <el-upload action="上传地址" :limit="1" :multiple="false" :show-file-list="false">
+                <el-upload
+                  :http-request="uploadFile"
+                  :action="'/attendance/' + attendanceID + '/ppt'"
+                  :multiple="false"
+                  :show-file-list="false"
+                  :on-success="submitSuccess"
+                >
                   <el-button plain class="orange-text full-width">PPT提交</el-button>
                 </el-upload>
               </el-col>
@@ -154,7 +155,12 @@
                 </template>
               </el-table-column>
             </el-table>
-            <el-row type="flex" justify="center" class="small-gap">
+            <el-row
+              v-if="canRegister&&attendanceID===undefined"
+              type="flex"
+              justify="center"
+              class="small-gap"
+            >
               <el-col :span="12">
                 <el-button
                   plain
@@ -165,8 +171,8 @@
             </el-row>
           </div>
         </div>
-        <div v-else-if="seminarInfo.status==='已完成'">
-          <div v-if="attendanceId!==undefined">
+        <div v-else-if="seminarInfo.status==='已结束'">
+          <div v-if="attendanceID!==undefined">
             <el-table :data="fileData" :show-header="false">
               <el-table-column min-width="40%">
                 <template slot-scope="scope">
@@ -178,7 +184,7 @@
                   <div v-if="scope.row.title==='报名信息'" class="tip-text">{{scope.row.content}}</div>
                   <div
                     v-else-if="scope.row.content===false"
-                    class="red-text"
+                    class="red-text more-text"
                     style="font-size: 0.75rem;"
                   >未提交
                     <br>
@@ -190,7 +196,13 @@
             </el-table>
             <el-row type="flex" justify="center" class="small-gap">
               <el-col :span="12">
-                <el-upload action="上传地址" :limit="1" :multiple="false" :show-file-list="false">
+                <el-upload
+                  :http-request="uploadFile"
+                  :action="'/attendance/' + attendanceID + '/report'"
+                  :multiple="false"
+                  :show-file-list="false"
+                  :on-success="submitSuccess"
+                >
                   <el-button plain class="orange-text full-width">书面报告提交</el-button>
                 </el-upload>
               </el-col>
@@ -198,7 +210,7 @@
           </div>
         </div>
         <div v-else-if="seminarInfo.status==='已截止'">
-          <div v-if="attendanceId!==undefined">
+          <div v-if="attendanceID!==undefined">
             <el-table :data="fileData" :show-header="false">
               <el-table-column min-width="40%">
                 <template slot-scope="scope">
@@ -217,16 +229,16 @@
                 </template>
               </el-table-column>
             </el-table>
-            <el-row type="flex" justify="center" class="small-gap">
-              <el-col :span="12">
-                <el-button
-                  plain
-                  class="orange-text full-width"
-                  @click.native.prevent="enterScore"
-                >查看成绩</el-button>
-              </el-col>
-            </el-row>
           </div>
+          <el-row type="flex" justify="center" class="small-gap">
+            <el-col :span="12">
+              <el-button
+                plain
+                class="orange-text full-width"
+                @click.native.prevent="enterScore"
+              >查看成绩</el-button>
+            </el-col>
+          </el-row>
         </div>
       </div>
     </el-main>
@@ -271,15 +283,19 @@
                       <div class="content-text bold-text">班级：</div>
                     </template>
                     <el-select
-                      v-model="round"
+                      v-model="selectedClass"
                       placeholder="请选择班级"
                       class="content-text"
                       size="medium"
                       no-data-text="暂时没有班级可选"
                     >
-                      <el-option value="1" label="2016(1)" class="content-text"></el-option>
-                      <el-option value="2" label="2016(2)" class="content-text"></el-option>
-                      <el-option value="3" label="2016(3)" class="content-text"></el-option>
+                      <el-option
+                        v-for="(item,index) in classList"
+                        :key="index"
+                        :value="item.id"
+                        :label="item.grade+'('+item.serial+')'"
+                        class="content-text"
+                      ></el-option>
                     </el-select>
                   </el-form-item>
                 </el-form>
@@ -289,7 +305,7 @@
               <el-col :span="6">展示次序</el-col>
               <el-col :span="6">小组序号</el-col>
               <el-col :span="6">组长</el-col>
-              <el-col :span="6" v-if="seminarInfo.status==='已完成'">展示报告</el-col>
+              <el-col :span="6" v-if="seminarInfo.status==='已结束'">展示报告</el-col>
               <el-col :span="6" v-else>展示材料</el-col>
             </el-row>
           </div>
@@ -305,7 +321,7 @@
                       <div v-if="scope.row.pptStatus===true">已上传</div>
                       <div v-else-if="scope.row.pptStatus===false">未上传</div>
                     </div>
-                    <div v-else-if="seminarInfo.status==='已完成'">
+                    <div v-else-if="seminarInfo.status==='已结束'">
                       <el-button plain size="small" v-if="scope.row.reportStatus===true">下载</el-button>
                       <div v-else-if="scope.row.reportStatus===false">未上传</div>
                     </div>
@@ -326,7 +342,7 @@
               <el-col :span="5">展示次序</el-col>
               <el-col :span="5">小组序号</el-col>
               <el-col :span="5">组长</el-col>
-              <el-col :span="5" v-if="seminarInfo.status==='已完成'">展示报告</el-col>
+              <el-col :span="5" v-if="seminarInfo.status==='已结束'">展示报告</el-col>
               <el-col :span="5" v-else>展示材料</el-col>
             </el-row>
           </div>
@@ -339,14 +355,15 @@
                 <el-table-column min-width="20.83%" align="center">
                   <template slot-scope="scope">
                     <div v-if="seminarInfo.status==='未开始'">
-                      <div v-if="scope.row.id===attendanceId">
+                      <div v-if="scope.row.id===attendanceID">
                         <div v-if="scope.row.pptStatus===true">已上传</div>
                         <el-upload
-                          ref="upload"
-                          action="上传地址"
                           v-else-if="scope.row.pptStatus===false"
-                          :limit="1"
+                          :http-request="uploadFile"
+                          :action="'/attendance/' + attendanceID + '/ppt'"
                           :multiple="false"
+                          :show-file-list="false"
+                          :on-success="submitSuccess"
                         >
                           <el-button plain slot="trigger" size="small">上传</el-button>
                         </el-upload>
@@ -356,7 +373,7 @@
                         <div v-else-if="scope.row.pptStatus===false">未上传</div>
                       </div>
                     </div>
-                    <div v-else-if="seminarInfo.status==='已完成'">
+                    <div v-else-if="seminarInfo.status==='已结束'">
                       <el-button plain size="small" v-if="scope.row.reportStatus===true">下载</el-button>
                       <div v-else-if="scope.row.reportStatus===false">未上传</div>
                     </div>
@@ -370,43 +387,61 @@
                   <template slot-scope="scope">
                     <div v-if="scope.row.id===undefined">
                       <div v-if="seminarInfo.status==='未开始'">
-                        <el-button plain size="small" v-if="attendanceId===undefined">报名</el-button>
+                        <el-button
+                          plain
+                          size="small"
+                          v-if="canRegister&&attendanceID===undefined"
+                          @click.native.prevent="enterAttendance"
+                        >报名</el-button>
                       </div>
                     </div>
-                    <div v-else-if="scope.row.id===attendanceId">
+                    <div v-else-if="scope.row.id===attendanceID">
                       <div v-if="seminarInfo.status==='未开始'">
-                        <el-button plain size="small">取消报名</el-button>
+                        <el-button plain size="small" @click.native.prevent="giveUp">取消报名</el-button>
                       </div>
-                      <div v-else-if="seminarInfo.status==='已完成'">
-                        <el-button plain size="small" v-if="scope.row.reportStatus===true">重新上传</el-button>
+                      <div v-else-if="seminarInfo.status==='已结束'">
                         <el-upload
-                          ref="upload"
-                          action="上传地址"
-                          v-else-if="scope.row.reportStatus===false"
-                          :limit="1"
+                          :http-request="uploadFile"
+                          :action="'/attendance/' + attendanceID + '/report'"
                           :multiple="false"
+                          :show-file-list="false"
+                          :on-success="submitSuccess"
                         >
-                          <el-button plain slot="trigger" size="small">上传</el-button>
+                          <el-button
+                            plain
+                            slot="trigger"
+                            size="small"
+                            v-if="scope.row.reportStatus===true"
+                          >重新上传</el-button>
+                          <el-button
+                            plain
+                            slot="trigger"
+                            size="small"
+                            v-else-if="scope.row.reportStatus===false"
+                          >上传</el-button>
                         </el-upload>
                       </div>
                       <div v-else>
                         <el-upload
-                          ref="upload"
-                          action="上传地址"
-                          v-if="scope.row.pptStatus===true"
-                          :limit="1"
+                          :http-request="uploadFile"
+                          :action="'/attendance/' + attendanceID + '/report'"
                           :multiple="false"
+                          :show-file-list="false"
+                          :file-list="fileList"
+                          :on-success="submitSuccess"
                         >
-                          <el-button plain slot="trigger" size="small">重新上传</el-button>
-                        </el-upload>
-                        <el-upload
-                          ref="upload"
-                          action="上传地址"
-                          v-else-if="scope.row.pptStatus===false"
-                          :limit="1"
-                          :multiple="false"
-                        >
-                          <el-button plain slot="trigger" size="small">上传</el-button>
+                          <el-button
+                            plain
+                            slot="trigger"
+                            size="small"
+                            v-if="scope.row.pptStatus===true"
+                          >重新上传</el-button>
+                          <el-button
+                            plain
+                            slot="trigger"
+                            size="small"
+                            v-else-if="scope.row.pptStatus===false"
+                          >上传</el-button>
                         </el-upload>
                       </div>
                     </div>
@@ -442,57 +477,50 @@ export default {
   data() {
     return {
       seminarInfo: {
-        round: 1,
-        id: undefined,
-        topic: '需求分析',
+        round: undefined,
+        topic: undefined,
         intro: undefined,
-        status: '已完成',
-        order: 1,
-        courseId: undefined,
-        teamNumLimit: 6,
-        signupStartTime: '2018-01-01 08:00:00',
-        signupEndTime: '2018-01-10 12:00:00',
-        reportDDL: '2018-12-29 00:00:00',
-        classId: undefined
+        status: undefined,
+        order: undefined,
+        teamNumLimit: undefined,
+        signupStartTime: undefined,
+        signupEndTime: undefined,
+        reportDDL: undefined
       },
-      teamList: [{
-        id: 1,
-        order: 1,
-        name: '1-1',
-        leader: 'A',
-        pptStatus: true,
-        reportStatus: true
-      }, {
-        id: 2,
-        order: 2,
-        name: '1-2',
-        leader: 'B',
-        pptStatus: false,
-        reportStatus: false
-      }, {
-        id: 3,
-        order: 3,
-        name: '1-3',
-        leader: 'C',
-        pptStatus: true,
-        reportStatus: true
-      }, {
+      emptyReccord: {
         id: undefined,
         order: undefined,
         name: undefined,
         leader: undefined,
         pptStatus: undefined,
         reportStatus: undefined
-      }],
-      courseName: 'OOAD',
+      },
+      attendanceInfo: {
+        basicInfo: undefined,
+        ppt: false,
+        report: false
+      },
+      teamList: [],
       message: undefined,
-      attendanceId: 3,
-      messageVisible: false
+      attendanceID: undefined,
+      messageVisible: false,
+      selectedClass: undefined,
+      classList: undefined,
+      teamID: undefined
     }
   },
   computed: {
+    seminarID() {
+      return this.$route.query.seminarID
+    },
+    classID() {
+      return this.$route.query.classID
+    },
+    courseID() {
+      return this.$route.query.courseID
+    },
     modifiedTitle() {
-      return this.courseName + '-' + this.seminarInfo.topic
+      return '第' + this.seminarInfo.order + '次讨论课'
     },
     role() {
       return this.$store.state.role
@@ -538,11 +566,10 @@ export default {
     pptData() {
       return [{
         title: '报名信息',
-        // 记得添加
-        content: '队伍报名信息'
+        content: this.attendanceInfo.basicInfo
       }, {
         title: 'PPT',
-        content: false
+        content: this.attendanceInfo.ppt
       }]
     },
     restTime() {
@@ -556,37 +583,216 @@ export default {
       var minutes = Math.floor(leave2 / (60 * 1000))
       return '剩余' + days + '天' + hours + '小时' + minutes + '分'
     },
+    canRegister() {
+      return this.$datetimeFormat.toDate(this.seminarInfo.signupEndTime).getTime() > (new Date()).getTime()
+    },
     fileData() {
       return [{
         title: '报名信息',
-        // 记得添加
-        content: '队伍报名信息'
+        content: this.attendanceInfo.basicInfo
       }, {
         title: 'PPT',
-        content: true
+        content: this.attendanceInfo.ppt
       }, {
         title: '书面报告',
-        content: false,
+        content: this.attendanceInfo.report,
         restTime: this.restTime
       }]
     }
   },
   methods: {
     enterAttendance() {
-      this.$router.push('/seminar/attendance')
-    },
-    continueSeminar() {
-
-      this.$router.push('/seminar/process')
+      if (this.role === 'teacher') {
+        this.$router.push({ path: '/seminar/attendance', query: { seminarID: this.seminarID, classID: this.classID } })
+      } else {
+        this.$router.push({ path: '/seminar/attendance', query: { seminarID: this.seminarID, classID: this.classID, teamID: this.teamID } })
+      }
     },
     enterProcess() {
-      this.$router.push('/seminar/process')
+      if (this.role === 'teacher') {
+        if (this.seminarInfo.status === '未开始') {
+          this.$http.put('/seminar/' + this.seminarID + '/class/' + this.classID + '/status', { status: 1 }).then().catch(error => {
+            this.$createToast({
+              time: 500,
+              txt: error.message,
+              type: "error"
+            }).show()
+          })
+        }
+      }
+      this.$router.push({ path: '/seminar/process', query: { seminarID: this.seminarID, classID: this.classID, courseID: this.courseID } })
     },
     setReportScore() {
-      this.$router.push('/seminar/score/report')
+      if (this.role === 'teacher') {
+        this.$router.push({ path: '/seminar/score/report', query: { seminarID: this.seminarID, classID: this.classID } })
+      } else {
+        this.$router.push({ path: '/seminar/score/report', query: { seminarID: this.seminarID, classID: this.classID, teamID: this.teamID } })
+      }
     },
     enterScore() {
-      this.$router.push('/seminar/score')
+      if (this.role === 'teacher') {
+        this.$router.push({ path: '/seminar/score', query: { seminarID: this.seminarID, classID: this.classID } })
+      } else {
+        this.$router.push({ path: '/seminar/score', query: { seminarID: this.seminarID, classID: this.classID, teamID: this.teamID } })
+      }
+    },
+    giveUp() {
+      this.$http.delete('/attendance/' + this.attendanceID).then(() => {
+        this.$createToast({
+          time: 500,
+          txt: '取消成功',
+          type: "correct",
+          onTimeout: () => {
+            this.attendanceID = undefined
+          }
+        }).show()
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
+      })
+    },
+    uploadFile(param) {
+      let formData = new FormData();
+      formData.append("file", param.file);
+      this.$http.post(param.action, formData, {
+        'Content-Type': 'multipart/form-data'
+      }).then(res => {
+        if (res.message === 'fail to upload') {
+          this.$createToast({
+            time: 500,
+            txt: '文件上传失败',
+            type: "error"
+          }).show()
+          param.onError('文件上传失败(' + response.message + ')');
+        } else {
+          if (param.action.match('ppt')) {
+            param.onSuccess('ppt')
+          } else if (param.action.match('report')) {
+            param.onSuccess('report')
+          }
+        }
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: '文件上传失败:' + error.response.data,
+          type: "error"
+        }).show()
+        if (error.response) {
+          param.onError('文件上传失败(' + error.response.status + ')，' + error.response.data);
+        } else if (error.request) {
+          param.onError('文件上传失败，服务器端无响应');
+        } else {
+          param.onError('文件上传失败，请求封装失败');
+        }
+      })
+    },
+    submitSuccess(type) {
+      if (this.isMobile) {
+        this.$createToast({
+          time: 500,
+          txt: '提交成功',
+          type: 'correct',
+          onTimeout: () => {
+            if (type === 'ppt') {
+              this.attendanceInfo.ppt = true
+            } else if (type === 'report') {
+              this.attendanceInfo.report = true
+            }
+          }
+        }).show()
+      } else {
+        this.message = '提交成功！'
+        this.messageVisible = true
+      }
+    }
+  },
+  created() {
+    if (this.isMobile) {
+      this.$http.get('/seminar/' + this.seminarID + '/class/' + this.classID).then(response => {
+        this.seminarInfo.topic = response.topic
+        this.seminarInfo.round = response.round
+        this.seminarInfo.intro = response.intro
+        this.seminarInfo.order = response.order
+        this.seminarInfo.teamNumLimit = response.teamNumLimit
+        this.seminarInfo.signupStartTime = this.$datetimeFormat.toPretty(response.signUpStartTime)
+        this.seminarInfo.signupEndTime = this.$datetimeFormat.toPretty(response.signUpEndTime)
+        this.seminarInfo.reportDDL = this.$datetimeFormat.toPretty(response.reportDDL)
+        let status = response.status
+        if (status === 0) {
+          this.seminarInfo.status = "未开始"
+        } else if (status === 1) {
+          this.seminarInfo.status = "正在进行"
+        } else if ((new Date()).getTime() < this.$datetimeFormat.toDate(response.reportDDL).getTime()) {
+          this.seminarInfo.status = "已结束"
+        } else {
+          this.seminarInfo.status = "已截止"
+        }
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
+      })
+      if (this.role === 'student') {
+        this.$http.get('/course/' + this.courseID + '/myTeam').then(response => {
+          this.teamID = response.id
+          if (this.teamID === undefined) {
+            this.$createToast({
+              time: 500,
+              txt: '您还未组队',
+              type: "error"
+            }).show()
+          } else {
+            this.$http.get('/seminar/' + this.seminarID + '/team/' + this.teamID + '/attendance').then(res => {
+              this.attendanceID = res.id
+              this.attendanceInfo.basicInfo = res.teamNumber + '(' + res.teamOrder + ')'
+              this.attendanceInfo.ppt = res.pptUrl ? true : false
+              this.attendanceInfo.report = res.reportUrl ? true : false
+            }).catch(error => {
+              this.$createToast({
+                time: 500,
+                txt: error.message,
+                type: "error"
+              }).show()
+            })
+          }
+        }).catch(error => {
+          this.$createToast({
+            time: 500,
+            txt: error.message,
+            type: "error"
+          }).show()
+        })
+      }
+    } else {
+      this.$http.get('/seminar/' + this.seminarID).then(response => {
+        this.seminarInfo.topic = response.topic
+        this.seminarInfo.round = response.round
+        this.seminarInfo.intro = response.intro
+        this.seminarInfo.order = response.order
+        this.seminarInfo.teamNumLimit = response.teamNumLimit
+        this.seminarInfo.signupStartTime = this.$datetimeFormat.toPretty(response.signUpStartTime)
+        this.seminarInfo.signupEndTime = this.$datetimeFormat.toPretty(response.signUpEndTime)
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
+      })
+      this.$http.get('/seminar/' + this.seminarID + '/class').then(response => {
+        this.classList = response
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
+      })
     }
   }
 }

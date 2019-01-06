@@ -19,10 +19,7 @@ const datetimeFormat = {
     let year = parseInt(date.substring(0, 4))
     let month = parseInt(date.substring(5, 7))
     let day = parseInt(date.substring(8, 10))
-    return (new Date(year, month, day, 23, 59, 59)).toISOString().substring(0, 19)
-  },
-  toDateTime: (data) => {
-    return data.toISOString().substring(0, 19)
+    return (new Date(year, month - 1, day + 1, 7, 59, 59)).toISOString().substring(0, 19)
   }
 }
 

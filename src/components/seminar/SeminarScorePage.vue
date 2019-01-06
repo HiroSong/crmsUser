@@ -1,17 +1,17 @@
 <template>
   <el-container>
     <el-header class="header">
-      <common-sub-header :role="role" :is-mobile="true">{{courseName+'-成绩'}}</common-sub-header>
+      <common-sub-header :role="role" :is-mobile="true">{{seminarInfo.topic+'-成绩'}}</common-sub-header>
     </el-header>
     <el-main>
       <div v-if="role==='teacher'">
         <div v-show="canModify">
           <el-table
-            :data="scoreData"
+            :data="sortedScoreList"
             header-row-class-name="tip-text bold-text"
             row-class-name="tip-text"
           >
-            <el-table-column min-width="20%" prop="teamSerial" align="left"></el-table-column>
+            <el-table-column min-width="20%" prop="teamSerial" label="小组" align="left"></el-table-column>
             <el-table-column min-width="20%" prop="presentationScore" label="展示" align="center"></el-table-column>
             <el-table-column min-width="20%" prop="questionScore" label="提问" align="center"></el-table-column>
             <el-table-column min-width="20%" prop="reportScore" label="书面报告" align="center"></el-table-column>
@@ -24,7 +24,7 @@
           </el-row>
         </div>
         <div v-show="!canModify">
-          <el-table :data="scoreData" row-class-name="tip-text" :show-header="false">
+          <el-table :data="sortedScoreList" row-class-name="tip-text" :show-header="false">
             <el-table-column min-width="20%" prop="teamSerial" align="left"></el-table-column>
             <el-table-column min-width="80%" align="left">
               <template slot-scope="scope">
@@ -94,39 +94,43 @@ export default {
   },
   data() {
     return {
-      courseName: 'OOAD',
       seminarInfo: {
-        round: 1,
         id: undefined,
-        topic: '需求分析',
+        topic: undefined,
         intro: undefined,
-        status: '已完成',
-        order: 1,
-        courseId: undefined,
-        classId: undefined
+        order: undefined
       },
       attendanceData: {
-        teamGrade: '2016',
-        teamOrder: '1',
-        attendanceOrder: 1,
-        presentationScore: 5,
-        reportScore: 5,
-        questionScore: 5,
-        sumScore: 5
+        teamGrade: undefined,
+        teamClass: undefined,
+        attendanceOrder: undefined,
+        presentationScore: undefined,
+        reportScore: undefined,
+        questionScore: undefined,
+        sumScore: undefined
       },
-      scoreData: [{
-        teamSerial: '1-1',
-        presentationScore: 5,
-        questionScore: 5,
-        reportScore: 5,
-        sumScore: 5
-      }],
+      attendanceList: undefined,
+      scoreList: [],
       canModify: true
     }
   },
   computed: {
     role() {
       return this.$store.state.role
+    },
+    seminarID() {
+      return this.$route.query.seminarID
+    },
+    classID() {
+      return this.$route.query.classID
+    },
+    teamID() {
+      return this.$route.query.teamID
+    },
+    sortedScoreList() {
+      return this.scoreList.sort((a, b) => {
+        return a.order - b.order
+      })
     },
     infoData() {
       return [{
@@ -140,7 +144,7 @@ export default {
         content: this.seminarInfo.intro
       }, {
         title: '报名情况',
-        content: this.attendanceData.teamGrade + '-(' + this.attendanceData.teamOrder + ') ' + this.attendanceData.attendanceOrder
+        content: this.attendanceData.attendanceOrder === undefined ? '无' : this.attendanceData.teamGrade + '(' + this.attendanceData.teamClass + ')-' + this.attendanceData.attendanceOrder
       }, {
         title: '展示',
         content: this.attendanceData.presentationScore
@@ -158,17 +162,108 @@ export default {
   },
   methods: {
     confirmScore() {
-
-      this.canModify = true
-      this.$createToast({
-        time: 500,
-        txt: '修改成功!',
-        type: 'correct'
-      }).show()
+      this.scoreList.forEach((item, index, array) => {
+        this.$http.put('/seminar/' + this.seminarID + '/team/' + item.id + '/seminarscore', {
+          presentationScore: item.presentationScore,
+          questionScore: item.questionScore,
+          reportScore: item.reportScore
+        }).then(() => {
+          if (index === this.scoreList.length - 1) {
+            this.$createToast({
+              time: 500,
+              txt: '修改成功!',
+              type: 'correct',
+              onTimeout: () => {
+                this.canModify = true
+              }
+            }).show()
+          }
+        }).catch(error => {
+          this.$createToast({
+            time: 500,
+            txt: error.message,
+            type: 'error'
+          }).show()
+        })
+      })
     },
     modifyScore() {
-
       this.canModify = false
+    }
+  },
+  created() {
+    this.$http.get('/seminar/' + this.seminarID + '/class/' + this.classID).then(response => {
+      this.seminarInfo.topic = response.topic
+      this.seminarInfo.intro = response.intro
+      this.seminarInfo.order = response.order
+    }).catch(error => {
+      this.$createToast({
+        time: 500,
+        txt: error.message,
+        type: "error"
+      }).show()
+    })
+    if (this.role === 'teacher') {
+      this.$http.get('/seminar/' + this.seminarID + '/class/' + this.classID + '/attendance').then(response => {
+        this.attendanceList = response
+        this.attendanceList.forEach((value, index, array) => {
+          this.$http.get('/seminar/' + this.seminarID + '/team/' + value.teamID + '/seminarscore').then(response => {
+            this.scoreList.push({
+              id: value.teamID,
+              order: value.teamOrder,
+              teamSerial: value.teamOrder + ':' + value.teamNumber,
+              presentationScore: response.presentationScore,
+              questionScore: response.questionScore,
+              reportScore: response.reportScore,
+              sumScore: response.totalScore
+            })
+          }).catch(error => {
+            this.$createToast({
+              time: 500,
+              txt: error.message,
+              type: "error"
+            }).show()
+          })
+        })
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
+      })
+    } else {
+      this.$http.get('/seminar/' + this.seminarID + '/team/' + this.teamID + '/seminarscore').then(response => {
+        this.attendanceData.questionScore = response.questionScore
+        this.attendanceData.presentationScore = response.presentationScore
+        this.attendanceData.reportScore = response.reportScore
+        this.attendanceData.sumScore = response.totalScore
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
+      })
+      this.$http.get('/seminar/' + this.seminarID + '/team/' + this.teamID + '/attendance').then(response => {
+        this.attendanceData.attendanceOrder = response.teamOrder
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
+      })
+      this.$http.get('/class/' + this.classID).then(response => {
+        this.attendanceData.teamGrade = response.grade
+        this.attendanceData.teamClass = response.klassSerial
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
+      })
     }
   }
 }

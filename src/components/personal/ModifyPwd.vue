@@ -100,19 +100,34 @@ export default {
         this.$http.put('/user/password', {
           oldPassword: this.oldPassword,
           password: this.password
-        }).then(() => this.$createDialog({
-          type: 'alert',
-          title: '提示',
-          content: '密码修改成功,请重新登录',
-          confirmBtn: {
-            text: '确定',
-            active: true,
-            disabled: false
-          },
-          onConfirm: () => {
-            this.$router.push('/login')
+        }).then((response) => {
+          if (response) {
+            this.$createDialog({
+              type: 'alert',
+              title: '提示',
+              content: '密码修改成功,请重新登录',
+              confirmBtn: {
+                text: '确定',
+                active: true,
+                disabled: false
+              },
+              onConfirm: () => {
+                this.$router.push('/login')
+              }
+            }).show()
+          } else {
+            this.$createDialog({
+              type: 'alert',
+              title: '提示',
+              content: '请检查原密码！',
+              confirmBtn: {
+                text: '确定',
+                active: true,
+                disabled: false
+              }
+            }).show()
           }
-        }).show()).catch(error => {
+        }).catch(error => {
           if (error.response.status === 500) {
             this.$createToast({
               time: 500,

@@ -38,16 +38,14 @@ const router = new Router({
     path: '/home',
     name: 'HomePage',
     meta: {
-      title: '个人中心',
-      keepAlive: true
+      title: '个人中心'
     },
     component: resolve => require(['@/components/personal/HomePage'], resolve)
   }, {
     path: '/account',
     name: 'AccountPage',
     meta: {
-      title: '账户与设置',
-      keepAlive: true
+      title: '账户与设置'
     },
     component: resolve => require(['@/components/personal/AccountPage'], resolve)
   }, {
@@ -70,7 +68,9 @@ const router = new Router({
     path: '/account/todo',
     name: 'TodoPage',
     meta: {
-      title: '待办'
+      title: '待办',
+      requiresAuth: true,
+      requireRole: 'teacher'
     },
     component: resolve => require(['@/components/personal/TodoPage'], resolve)
   }, {
@@ -85,7 +85,8 @@ const router = new Router({
     name: 'CreateCoursePage',
     meta: {
       title: '新建课程',
-      keepAlive: true
+      requiresAuth: true,
+      requireRole: 'teacher'
     },
     component: resolve => require(['@/components/course/CreateCourse'], resolve)
   }, {
@@ -114,7 +115,8 @@ const router = new Router({
     name: 'CreateClassPage',
     meta: {
       title: '新建班级',
-      keepAlive: true
+      requiresAuth: true,
+      requireRole: 'teacher'
     },
     component: resolve => require(['@/components/course/CreateClass'], resolve)
   }, {
@@ -142,14 +144,18 @@ const router = new Router({
     path: '/seminar/setting',
     name: 'SeminarSettingPage',
     meta: {
-      title: '讨论课轮次设置'
+      title: '讨论课轮次设置',
+      requiresAuth: true,
+      requireRole: 'teacher'
     },
     component: resolve => require(['@/components/seminar/SeminarSettingPage'], resolve)
   }, {
     path: '/seminar/modify',
     name: 'ModifySeminarPage',
     meta: {
-      title: '讨论课修改'
+      title: '讨论课修改',
+      requiresAuth: true,
+      requireRole: 'teacher'
     },
     component: resolve => require(['@/components/seminar/ModifySeminar'], resolve)
   }, {
@@ -157,7 +163,8 @@ const router = new Router({
     name: 'CreateSeminarPage',
     meta: {
       title: '新建讨论课',
-      keepAlive: true
+      requiresAuth: true,
+      requireRole: 'teacher'
     },
     component: resolve => require(['@/components/seminar/CreateSeminar'], resolve)
   }, {
@@ -178,7 +185,9 @@ const router = new Router({
     path: '/seminar/score/report',
     name: 'ScoreReportPage',
     meta: {
-      title: '报告评分'
+      title: '报告评分',
+      requiresAuth: true,
+      requireRole: 'teacher'
     },
     component: resolve => require(['@/components/seminar/ScoreReport'], resolve)
   }, {
@@ -200,21 +209,26 @@ const router = new Router({
     name: 'CreateTeamPage',
     meta: {
       title: '创建小组',
-      keepAlive: true
+      requiresAuth: true,
+      requireRole: 'student'
     },
     component: resolve => require(['@/components/team/CreateTeam'], resolve)
   }, {
     path: '/team/info',
     name: 'TeamInfoPage',
     meta: {
-      title: '小组信息'
+      title: '小组信息',
+      requiresAuth: true,
+      requireRole: 'student'
     },
     component: resolve => require(['@/components/team/TeamInfoPage'], resolve)
   }, {
     path: '/application',
     name: 'ApplicationPage',
     meta: {
-      title: '共享设置'
+      title: '共享设置',
+      requiresAuth: true,
+      requireRole: 'teacher'
     },
     component: resolve => require(['@/components/application/ApplicationPage'], resolve)
   }, {
@@ -222,7 +236,8 @@ const router = new Router({
     name: 'CreateApplicationPage',
     meta: {
       title: '新增共享',
-      keepAlive: true
+      requiresAuth: true,
+      requireRole: 'teacher'
     },
     component: resolve => require(['@/components/application/CreateApplication'], resolve)
   }, {
@@ -236,32 +251,32 @@ const router = new Router({
   }]
 })
 
-// router.beforeEach((to, from, next) => {
-//   if (to.meta.title) {
-//     document.title = to.meta.title
-//   }
-// beActive状态判断是否需要进入激活界面
-//   if (to.matched.some(record => record.name === 'LoginPage')) {
-//     store.commit('CLEAR_AUTH')
-//     next()
-//   } else if (!store.state.beActive && to.matched.some(record => record.name !== 'ActiveAccountPage')) {
-//     next({
-//       path: '/active',
-//       replace: true
-//     })
-//   }
-//   const role = store.state.role ? store.state.role : window.sessionStorage.getItem('role')
-//   const token = store.state.token ? store.state.token : window.sessionStorage.getItem('token')
-//   if (to.matched.some(record => record.meta.requiresAuth)) {
-//     if (to.matched.some(record => record.meta.requireRole !== role) ||
-//       !token) {
-//       next(false)
-//     } else {
-//       next()
-//     }
-//   } else {
-//     next()
-//   }
-// });
+router.beforeEach((to, from, next) => {
+  if (to.meta.title) {
+    document.title = to.meta.title
+  }
+  // beActive状态判断是否需要进入激活界面
+  if (to.matched.some(record => record.name === 'LoginPage')) {
+    store.commit('CLEAR_AUTH')
+    next()
+  } else if (!store.state.beActive && to.matched.some(record => record.name !== 'ActiveAccountPage')) {
+    next({
+      path: '/active',
+      replace: true
+    })
+  }
+  const role = store.state.role ? store.state.role : window.sessionStorage.getItem('role')
+  const token = store.state.token ? store.state.token : window.sessionStorage.getItem('token')
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    if (to.matched.some(record => record.meta.requireRole !== role) ||
+      !token) {
+      next(false)
+    } else {
+      next()
+    }
+  } else {
+    next()
+  }
+});
 
 export default router
