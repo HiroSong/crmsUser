@@ -8,10 +8,10 @@
       <i class="iconfont icon-ketangpeixun title-text" aria-hidden="true"></i>
       <span class="title-text" slot="title">&nbsp;讨论课</span>
     </el-menu-item>
-    <el-menu-item v-if="isTeacher" :index="'/course/score?courseID='+courseID">
+    <!-- <el-menu-item v-if="isTeacher" :index="'/course/score?courseID='+courseID">
       <i class="iconfont icon-chengjiguanli title-text" aria-hidden="true"></i>
       <span class="title-text" slot="title">&nbsp;导出成绩</span>
-    </el-menu-item>
+    </el-menu-item>-->
     <el-menu-item v-if="!isTeacher" :index="'/seminar?courseID='+courseID+'&classID='+classID">
       <i class="iconfont icon-ketangpeixun title-text" aria-hidden="true"></i>
       <span class="title-text" slot="title">&nbsp;讨论课</span>

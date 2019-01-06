@@ -692,23 +692,36 @@ export default {
       this.$http.get('/seminar/' + this.seminarID + '/class/' + this.selectedClass + '/attendance').then(response => {
         response.forEach((item, index, array) => {
           this.$http.get('/attendance/' + item.id + '/ppt').then(res => {
-            this.attendanceList.push({
-              id: item.id,
-              teamOrder: item.teamOrder,
-              teamNumber: item.teamNumber,
-              pptName: res.name === null ? undefined : res.name,
-              pptUrl: res.url === null ? undefined : 'http://47.107.69.160:8080/download/attendance/' + item.id + '/ppt/' + res.url,
-              reportName: report.name === null ? undefined : report.name,
-              reportUrl: report.url === null ? undefined : 'http://47.107.69.160:8080/download/attendance/' + item.id + '/ppt/' + report.url
-            })
-            if (this.attendanceList.length === response.length) {
-              let tempList = this.attendanceList.sort((a, b) => a.teamOrder - b.teamOrder)
-              tempList.forEach((item, index, arr) => {
-
+            this.$http.get('/attendance/' + item.id + '/report').then(report => {
+              this.attendanceList.push({
+                id: item.id,
+                teamOrder: item.teamOrder,
+                teamNumber: item.teamNumber,
+                pptName: res.name === null ? undefined : res.name,
+                pptUrl: res.url === null ? undefined : 'http://47.107.69.160:8080/download/attendance/' + item.id + '/ppt/' + res.url,
+                reportName: report.name === null ? undefined : report.name,
+                reportUrl: report.url === null ? undefined : 'http://47.107.69.160:8080/download/attendance/' + item.id + '/report/' + report.url
               })
-              let curIndex = 1
-              tempList.forEach(item => {
-                while (item.teamOrder > curIndex) {
+              if (this.attendanceList.length === response.length) {
+                let tempList = this.attendanceList.sort((a, b) => a.teamOrder - b.teamOrder)
+                tempList.forEach((item, index, arr) => {
+
+                })
+                let curIndex = 1
+                tempList.forEach(item => {
+                  while (item.teamOrder > curIndex) {
+                    this.attendanceList.push({
+                      id: undefined,
+                      teamOrder: curIndex,
+                      teamNumber: undefined,
+                      pptName: undefined,
+                      pptUrl: undefined
+                    })
+                    curIndex++
+                  }
+                  curIndex++
+                })
+                while (curIndex < this.teamLimit) {
                   this.attendanceList.push({
                     id: undefined,
                     teamOrder: curIndex,
@@ -718,26 +731,15 @@ export default {
                   })
                   curIndex++
                 }
-                curIndex++
-              })
-              while (curIndex < this.teamLimit) {
-                this.attendanceList.push({
-                  id: undefined,
-                  teamOrder: curIndex,
-                  teamNumber: undefined,
-                  pptName: undefined,
-                  pptUrl: undefined
-                })
-                curIndex++
+                this.attendanceList = this.attendanceList.sort((a, b) => a.teamOrder - b.teamOrder)
               }
-              this.attendanceList = this.attendanceList.sort((a, b) => a.teamOrder - b.teamOrder)
-            }
-          }).catch(error => {
-            this.$createToast({
-              time: 500,
-              txt: error.message,
-              type: "error"
-            }).show()
+            }).catch(error => {
+              this.$createToast({
+                time: 500,
+                txt: error.message,
+                type: "error"
+              }).show()
+            })
           }).catch(error => {
             this.$createToast({
               time: 500,
@@ -746,6 +748,7 @@ export default {
             }).show()
           })
         })
+
         if (response.length === 0) {
           for (var i = 0; i < this.teamLimit; i++) {
             this.attendanceList.push({
@@ -757,12 +760,6 @@ export default {
             })
           }
         }
-      }).catch(error => {
-        this.$createToast({
-          time: 500,
-          txt: error.message,
-          type: "error"
-        }).show()
       }).catch(error => {
         this.$createToast({
           time: 500,
@@ -862,7 +859,6 @@ export default {
           response.forEach((item, index, array) => {
             this.$http.get('/attendance/' + item.id + '/ppt').then(res => {
               this.$http.get('/attendance/' + item.id + '/report').then(report => {
-
                 this.attendanceList.push({
                   id: item.id,
                   teamOrder: item.teamOrder,
@@ -903,13 +899,13 @@ export default {
                   }
                   this.attendanceList = this.attendanceList.sort((a, b) => a.teamOrder - b.teamOrder)
                 }
+              }).catch(error => {
+                this.$createToast({
+                  time: 500,
+                  txt: error.message,
+                  type: "error"
+                }).show()
               })
-            }).catch(error => {
-              this.$createToast({
-                time: 500,
-                txt: error.message,
-                type: "error"
-              }).show()
             }).catch(error => {
               this.$createToast({
                 time: 500,

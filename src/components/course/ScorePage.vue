@@ -132,7 +132,7 @@
         <common-aside :role="role" :courseID="courseID" :class="classID"></common-aside>
       </el-aside>
       <el-main class="main-gap">
-        <title-card>{{modifiedTitle}}</title-card>
+        <!-- <title-card>{{modifiedTitle}}</title-card>
         <div v-if="role==='teacher'">
           <el-form class="normal-gap">
             <el-form-item>
@@ -212,7 +212,7 @@
               </el-scrollbar>
             </div>
           </el-card>
-        </div>
+        </div>-->
       </el-main>
     </el-container>
   </el-container>

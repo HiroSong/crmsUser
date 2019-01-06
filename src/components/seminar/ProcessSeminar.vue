@@ -163,6 +163,7 @@ export default {
       reportEndTime: undefined,
       timer: undefined,
       stompInitClient: undefined,
+      teamID: undefined,
       WS_API: 'http://47.107.69.160:8080/gs-guide-websocket',
       // WS_API: 'http://localhost:8080/gs-guide-websocket',
       headers: {
@@ -251,7 +252,7 @@ export default {
     },
     listQuestion() {
       let questions = []
-      tempList.forEach(item => {
+      this.tempList.forEach(item => {
         questions.push(item.label)
       })
       this.$refs.questionDrawer.refill(0, questions)
@@ -282,21 +283,25 @@ export default {
           type: 'warn'
         }).show()
       } else {
-        if (this.questionScoreList[this.curQuestion] === undefined) {
-          this.questionScoreList[this.curQuestion] = 0
-        }
-        this.$http.put('/seminar/' + this.seminarID + '/team/' + this.questionList[this.curQuestion].teamID + '/questionscore', {
-          questionScore: this.questionScoreList[this.curQuestion]
-        }).then(() => {
-          this.stompInitClient.send('/app/seminar/' + this.seminarID + '/class/' + this.classID + '/question/' + this.questionList[this.curQuestion].order + '/' + this.questionScoreList[this.curQuestion], this.headers, {})
+        if (this.curQuestion === -1) {
           this.stompInitClient.send('/app/seminar/' + this.seminarID + '/class/' + this.classID + '/selectquestion', this.headers, {})
-        }).catch(error => {
-          this.$createToast({
-            time: 500,
-            txt: error.message,
-            type: "error"
-          }).show()
-        })
+        } else {
+          if (this.questionScoreList[this.curQuestion] === undefined) {
+            this.questionScoreList[this.curQuestion] = 0
+          }
+          this.$http.put('/seminar/' + this.seminarID + '/team/' + this.questionList[this.curQuestion].teamID + '/questionscore', {
+            questionScore: this.questionScoreList[this.curQuestion]
+          }).then(() => {
+            this.stompInitClient.send('/app/seminar/' + this.seminarID + '/class/' + this.classID + '/question/' + this.questionList[this.curQuestion].order + '/' + this.questionScoreList[this.curQuestion], this.headers, {})
+            this.stompInitClient.send('/app/seminar/' + this.seminarID + '/class/' + this.classID + '/selectquestion', this.headers, {})
+          }).catch(error => {
+            this.$createToast({
+              time: 500,
+              txt: error.message,
+              type: "error"
+            }).show()
+          })
+        }
       }
     },
     showEndTimePicker() {
@@ -670,6 +675,17 @@ export default {
     }
   },
   created() {
+    if (this.role === 'student') {
+      this.$http.get('/course/' + this.courseID + '/myTeam').then(response => {
+        this.teamID = response.id
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
+      })
+    }
     this.$http.get('/seminar/' + this.seminarID + '/class/' + this.classID + '/enter').then(() => {
       this.initWebSocket()
     }).catch(error => {
