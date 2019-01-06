@@ -8,7 +8,7 @@ const httpService = axios.create({
   // url前缀-'https://some-domain.com/api/'
   baseURL: '/api',
   // 请求超时时间
-  timeout: 5000,
+  timeout: 10000,
   withCredentials: true
 })
 

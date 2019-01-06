@@ -145,7 +145,7 @@ export default {
   },
   computed: {
     id() {
-      return this.$store.state.id
+      return parseInt(this.$store.state.id)
     },
     sortedNoTeamList() {
       return this.noTeamList.sort((a, b) => {

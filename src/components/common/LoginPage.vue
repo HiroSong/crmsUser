@@ -44,7 +44,7 @@
       </el-row>
       <el-row type="flex" justify="end" class="small-gap">
         <router-link to="/find">
-          <a class="tip-text">忘记密码</a>
+          <div class="tip-text">忘记密码</div>
         </router-link>
       </el-row>
       <el-row type="flex" justify="center" class="normal-gap">

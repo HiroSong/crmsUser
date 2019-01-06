@@ -69,7 +69,7 @@ export default {
       return mem
     },
     classSerial() {
-      let serial = ""
+      let serial = "1"
       this.classOptions.forEach(item => {
         if (item.value === this.selectedClass) {
           serial = item.text.split('(')[1].split(')')[0]
@@ -133,10 +133,12 @@ export default {
   created() {
     this.$http.get('/course/' + this.courseID + '/noTeam').then(response =>
       response.forEach(element => {
-        this.ungroupedList.push({
-          label: element.account + '-' + element.name,
-          value: element.id
-        })
+        if (element.id != this.$store.state.id) {
+          this.ungroupedList.push({
+            label: element.account + '-' + element.name,
+            value: element.id
+          })
+        }
       })
     ).catch(error => {
       this.$createToast({

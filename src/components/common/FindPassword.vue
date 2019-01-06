@@ -54,7 +54,7 @@ export default {
       }).catch(error => {
         this.$createToast({
           time: 500,
-          txt: error.message,
+          txt: '您可能还未激活账户',
           type: "error"
         }).show()
       })

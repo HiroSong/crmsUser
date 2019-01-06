@@ -137,6 +137,19 @@ export default {
         } else {
           this.myTeam = undefined
         }
+        this.$http.get('/course/' + this.courseID + '/team').then(response =>
+          response.forEach(element => {
+            if (!(this.myTeam !== undefined && element.id === this.myTeam.id)) {
+              this.teamList.push(element)
+            }
+          })
+        ).catch(error => {
+          this.$createToast({
+            time: 500,
+            txt: error.message,
+            type: "error"
+          }).show()
+        })
       }).catch(error => {
         this.$createToast({
           time: 500,
@@ -157,20 +170,19 @@ export default {
           type: "error"
         }).show()
       })
-    }
-    this.$http.get('/course/' + this.courseID + '/team').then(response =>
-      response.forEach(element => {
-        if (!(this.myTeam !== undefined && element.id === this.myTeam.id)) {
+    } else {
+      this.$http.get('/course/' + this.courseID + '/team').then(response =>
+        response.forEach(element => {
           this.teamList.push(element)
-        }
+        })
+      ).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
       })
-    ).catch(error => {
-      this.$createToast({
-        time: 500,
-        txt: error.message,
-        type: "error"
-      }).show()
-    })
+    }
     this.$http.get('/course/' + this.courseID + '/noTeam').then(response =>
       response.forEach(element => {
         this.noTeamList.push(element)

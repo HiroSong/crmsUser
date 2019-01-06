@@ -259,6 +259,8 @@ router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.name === 'LoginPage')) {
     store.commit('CLEAR_AUTH')
     next()
+  } else if (to.matched.some(record => record.name === 'FindPasswordPage')) {
+    next()
   } else if (!store.state.beActive && to.matched.some(record => record.name !== 'ActiveAccountPage')) {
     next({
       path: '/active',

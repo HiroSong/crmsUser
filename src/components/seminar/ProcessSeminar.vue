@@ -252,7 +252,7 @@ export default {
     },
     listQuestion() {
       let questions = []
-      this.tempList.forEach(item => {
+      this.questionList.forEach(item => {
         questions.push(item.label)
       })
       this.$refs.questionDrawer.refill(0, questions)

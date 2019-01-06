@@ -321,11 +321,15 @@
                       <div v-else>未上传</div>
                     </div>
                     <div v-else-if="seminarInfo.status==='已结束'">
-                      <el-button plain size="small" v-if="scope.row.reportUrl!==undefined">下载</el-button>
+                      <el-button plain size="small" v-if="scope.row.reportUrl!==undefined">
+                        <a :href="scope.row.reportUrl" :download="scope.row.reportName">下载</a>
+                      </el-button>
                       <div v-else>未上传</div>
                     </div>
                     <div v-else>
-                      <el-button plain size="small" v-if="scope.row.pptUrl!==undefined">下载</el-button>
+                      <el-button plain size="small" v-if="scope.row.pptUrl!==undefined">
+                        <a :href="scope.row.pptUrl" :download="scope.row.pptName">下载</a>
+                      </el-button>
                       <div v-else>未上传</div>
                     </div>
                   </template>
@@ -375,7 +379,9 @@
                       <div v-else>未上传</div>
                     </div>
                     <div v-else>
-                      <el-button plain size="small" v-if="scope.row.pptUrl!==undefined">下载</el-button>
+                      <el-button plain size="small" v-if="scope.row.pptUrl!==undefined">
+                        <a :href="scope.row.pptUrl" :download="scope.row.pptName">下载</a>
+                      </el-button>
                       <div v-else>未上传</div>
                     </div>
                   </template>
@@ -552,15 +558,19 @@ export default {
       }]
     },
     restTime() {
-      let curTime = Date.parse(new Date())
-      let endTime = Date.parse(new Date(this.seminarInfo.reportDDL.replace(/-/g, '/')))
-      let restMs = endTime - curTime
-      var days = Math.floor(restMs / (24 * 3600 * 1000))
-      var leave1 = restMs % (24 * 3600 * 1000)
-      var hours = Math.floor(leave1 / (3600 * 1000))
-      var leave2 = leave1 % (3600 * 1000)
-      var minutes = Math.floor(leave2 / (60 * 1000))
-      return '剩余' + days + '天' + hours + '小时' + minutes + '分'
+      if (this.seminarInfo.reportDDL === undefined) {
+        return '无相关信息'
+      } else {
+        let curTime = Date.parse(new Date())
+        let endTime = Date.parse(new Date(this.seminarInfo.reportDDL.replace(/-/g, '/')))
+        let restMs = endTime - curTime
+        var days = Math.floor(restMs / (24 * 3600 * 1000))
+        var leave1 = restMs % (24 * 3600 * 1000)
+        var hours = Math.floor(leave1 / (3600 * 1000))
+        var leave2 = leave1 % (3600 * 1000)
+        var minutes = Math.floor(leave2 / (60 * 1000))
+        return '剩余' + days + '天' + hours + '小时' + minutes + '分'
+      }
     },
     canRegister() {
       return this.$datetimeFormat.toDate(this.seminarInfo.signupEndTime).getTime() > (new Date()).getTime()
@@ -771,32 +781,6 @@ export default {
   },
   created() {
     if (this.isMobile) {
-      this.$http.get('/seminar/' + this.seminarID + '/class/' + this.classID).then(response => {
-        this.seminarInfo.topic = response.topic
-        this.seminarInfo.round = response.round
-        this.seminarInfo.intro = response.intro
-        this.seminarInfo.order = response.order
-        this.seminarInfo.teamNumLimit = response.teamNumLimit
-        this.seminarInfo.signupStartTime = this.$datetimeFormat.toPretty(response.signUpStartTime)
-        this.seminarInfo.signupEndTime = this.$datetimeFormat.toPretty(response.signUpEndTime)
-        this.seminarInfo.reportDDL = this.$datetimeFormat.toPretty(response.reportDDL)
-        let status = response.status
-        if (status === 0) {
-          this.seminarInfo.status = "未开始"
-        } else if (status === 1) {
-          this.seminarInfo.status = "正在进行"
-        } else if ((new Date()).getTime() < this.$datetimeFormat.toDate(response.reportDDL).getTime()) {
-          this.seminarInfo.status = "已结束"
-        } else {
-          this.seminarInfo.status = "已截止"
-        }
-      }).catch(error => {
-        this.$createToast({
-          time: 500,
-          txt: error.message,
-          type: "error"
-        }).show()
-      })
       if (this.role === 'student') {
         this.$http.get('/course/' + this.courseID + '/myTeam').then(response => {
           this.teamID = response.id
@@ -804,7 +788,10 @@ export default {
             this.$createToast({
               time: 500,
               txt: '您还未组队',
-              type: "error"
+              type: "error",
+              onTimeout: () => {
+                this.$router.back()
+              }
             }).show()
           } else {
             this.$http.get('/seminar/' + this.seminarID + '/team/' + this.teamID + '/attendance').then(res => {
@@ -828,6 +815,32 @@ export default {
           }).show()
         })
       }
+      this.$http.get('/seminar/' + this.seminarID + '/class/' + this.classID).then(response => {
+        this.seminarInfo.topic = response.topic
+        this.seminarInfo.round = response.round
+        this.seminarInfo.intro = response.intro
+        this.seminarInfo.order = response.order
+        this.seminarInfo.teamNumLimit = response.teamNumLimit
+        this.seminarInfo.signupStartTime = response.signUpStartTime ? this.$datetimeFormat.toPretty(response.signUpStartTime) : undefined
+        this.seminarInfo.signupEndTime = response.signUpEndTime ? this.$datetimeFormat.toPretty(response.signUpEndTime) : undefined
+        this.seminarInfo.reportDDL = response.reportDDL ? this.$datetimeFormat.toPretty(response.reportDDL) : undefined
+        let status = response.status
+        if (status === 0) {
+          this.seminarInfo.status = "未开始"
+        } else if (status === 1) {
+          this.seminarInfo.status = "正在进行"
+        } else if (response.reportDDL === undefined || (new Date()).getTime() < this.$datetimeFormat.toDate(response.reportDDL).getTime()) {
+          this.seminarInfo.status = "已结束"
+        } else {
+          this.seminarInfo.status = "已截止"
+        }
+      }).catch(error => {
+        this.$createToast({
+          time: 500,
+          txt: error.message,
+          type: "error"
+        }).show()
+      })
     } else {
       this.$http.get('/seminar/' + this.seminarID).then(response => {
         this.seminarInfo.topic = response.topic
@@ -835,8 +848,8 @@ export default {
         this.seminarInfo.intro = response.intro
         this.seminarInfo.order = response.order
         this.seminarInfo.teamNumLimit = response.teamNumLimit
-        this.seminarInfo.signupStartTime = this.$datetimeFormat.toPretty(response.signUpStartTime)
-        this.seminarInfo.signupEndTime = this.$datetimeFormat.toPretty(response.signUpEndTime)
+        this.seminarInfo.signupStartTime = response.signUpStartTime ? this.$datetimeFormat.toPretty(response.signUpStartTime) : undefined
+        this.seminarInfo.signupEndTime = response.signUpEndTime ? this.$datetimeFormat.toPretty(response.signUpEndTime) : undefined
       }).catch(error => {
         this.$createToast({
           time: 500,

@@ -263,10 +263,10 @@ export default {
         reportRate: 0,
         minNum: undefined,
         maxNum: undefined,
-        startTime: undefined,
-        endTime: undefined,
+        startTime: this.$datetimeFormat.getToday(),
+        endTime: this.$datetimeFormat.getToday(),
         numLimitCourse: [],
-        numLimitRule: undefined,
+        numLimitRule: false,
         conflictCourse: []
       },
       numLimitRuleOptions: [{

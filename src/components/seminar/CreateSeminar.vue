@@ -85,8 +85,8 @@ export default {
         intro: undefined,
         order: undefined,
         beVisible: true,
-        signUpStartTime: undefined,
-        signUpEndTime: undefined,
+        signUpStartTime: this.$datetimeFormat.getToday(),
+        signUpEndTime: this.$datetimeFormat.getToday(),
         teamNumLimit: 5,
         round: undefined,
         visibleStatus: '可见'

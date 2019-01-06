@@ -296,7 +296,7 @@ export default {
           for (var i = 0; i < this.teamLimit; i++) {
             this.attendanceList.push({
               id: undefined,
-              teamOrder: i,
+              teamOrder: i + 1,
               teamNumber: undefined,
               pptName: undefined,
               pptUrl: undefined
